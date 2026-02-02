@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SKYNET V15 - COMMAND CENTER</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    <style>
+        body { background-color: #000; color: #fff; font-family: 'Verdana', sans-serif; margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        .toolbar { background: #050505; border-bottom: 2px solid #333; padding: 5px 20px; display: flex; align-items: center; justify-content: space-between; height: 60px; flex-shrink: 0; }
+        .logo { font-size: 1.6rem; font-weight: 900; letter-spacing: 2px; }
+        .logo span { color: #00ff41; }
+        .inputs { display: flex; gap: 15px; align-items: center; }
+        input { background: #111; border: 2px solid #444; color: #fff; padding: 8px; font-size: 1.2rem; font-weight: bold; text-align: center; width: 110px; border-radius: 4px; }
+        button { background: #00ff41; color: #000; border: none; padding: 10px 25px; font-size: 1rem; font-weight: 900; border-radius: 4px; cursor: pointer; text-transform: uppercase; }
+        button:hover { background: #fff; }
+        .live-price-box { text-align: right; }
+        .live-label { font-size: 0.7rem; color: #888; font-weight: bold; }
+        .live-price { font-size: 2rem; font-weight: bold; color: #fff; font-family: monospace; }
+        .main-container { flex: 1; display: flex; width: 100%; height: 100%; overflow: hidden; }
+        .left-column { width: 55%; border-right: 4px solid #222; display: flex; flex-direction: column; position: relative; }
+        .right-column { width: 45%; display: flex; flex-direction: column; }
+        .right-top, .right-bottom { flex: 1; display: flex; flex-direction: column; position: relative; }
+        .right-top { border-bottom: 4px solid #222; }
+        .screen-header { padding: 8px 15px; background: #0a0a0a; border-bottom: 1px solid #222; display: flex; justify-content: space-between; align-items: center; }
+        .screen-title { color: #00ff41; font-size: 1.1rem; font-weight: 900; text-transform: uppercase; }
+        .status-txt { font-size: 0.9rem; color: #666; font-weight: bold; }
+        .chart-area { flex: 1; position: relative; width: 100%; background: #000; }
+        .hud-tag { position: absolute; top: 15px; left: 15px; pointer-events: none; background: rgba(0, 0, 0, 0.85); border-left: 5px solid #00ff41; padding: 10px; border-radius: 4px; z-index: 10; }
+        .hud-line { font-size: 0.85rem; color: #ccc; margin-bottom: 2px; font-weight: bold; }
+        .hud-val { font-size: 1.4rem; font-weight: 900; color: #fff; }
+    </style>
+</head>
+<body>
+    <div class="toolbar">
+        <div class="logo">SKYNET <span>COMMAND</span></div>
+        <div class="inputs"><input type="text" id="symbol" value="BTCBRL"><button onclick="startSystem()">SCAN</button></div>
+        <div class="live-price-box"><div class="live-label">PREÇO TEMPO REAL</div><div class="live-price" id="mainPrice">---.--</div></div>
+    </div>
+    <div class="main-container">
+        <div class="left-column">
+            <div class="screen-header"><span class="screen-title">VISÃO MACRO (SEMANAL)</span><span class="status-txt" id="infoW">---</span></div>
+            <div class="chart-area">
+                <div class="hud-tag">
+                    <div class="hud-line" id="labelW">ALVO:</div>
+                    <div class="hud-val" id="targetW">---</div>
+                    <div class="hud-line" style="margin-top:5px;">CONF: <span id="scoreW" style="color:#00ff41;">---</span></div>
+                </div>
+                <canvas id="chartW"></canvas>
+            </div>
+        </div>
+        <div class="right-column">
+            <div class="right-top">
+                <div class="screen-header"><span class="screen-title">DIÁRIO (MÉDIO PRAZO)</span><span class="status-txt" id="infoD">---</span></div>
+                <div class="chart-area">
+                    <div class="hud-tag">
+                        <div class="hud-line" id="labelD">ALVO:</div>
+                        <div class="hud-val" id="targetD">---</div>
+                        <div class="hud-line" style="margin-top:5px;">CONF: <span id="scoreD" style="color:#00ff41;">---</span></div>
+                    </div>
+                    <canvas id="chartD"></canvas>
+                </div>
+            </div>
+            <div class="right-bottom">
+                <div class="screen-header"><span class="screen-title">H4 (CURTO PRAZO)</span><span class="status-txt" id="info4">---</span></div>
+                <div class="chart-area">
+                    <div class="hud-tag">
+                        <div class="hud-line" id="label4">ALVO:</div>
+                        <div class="hud-val" id="target4">---</div>
+                        <div class="hud-line" style="margin-top:5px;">CONF: <span id="score4" style="color:#00ff41;">---</span></div>
+                    </div>
+                    <canvas id="chart4"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        let chartW, chartD, chart4;
+        let ws;
+        let histW = [], histD = [], hist4 = [];
+
+        window.onload = () => { initCharts(); startSystem(); };
+
+        async function startSystem() {
+            if(ws) ws.close();
+            const symbol = document.getElementById('symbol').value.toUpperCase();
+            setLoading(true);
+            try {
+                const [resW, resD, res4] = await Promise.all([
+                    fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1w&limit=1000`),
+                    fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1d&limit=1000`),
+                    fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=4h&limit=1000`)
+                ]);
+                histW = parseData(await resW.json());
+                histD = parseData(await resD.json());
+                hist4 = parseData(await res4.json());
+                setLoading(false);
+                connectStream(symbol);
+                refreshEngines();
+            } catch (e) { console.error(e); }
+        }
+
+        function parseData(apiData) { return apiData.map(d => ({ x: d[0], c: parseFloat(d[4]) })); }
+
+        function setLoading(state) {
+            const txt = state ? "CARREGANDO..." : "RASTREAMENTO ATIVO";
+            const col = state ? "#e6e600" : "#00ff41";
+            ['infoW', 'infoD', 'info4'].forEach(id => { document.getElementById(id).innerText = txt; document.getElementById(id).style.color = col; });
+        }
+
+        function connectStream(symbol) {
+            ws = new WebSocket(`wss://stream.binance.com:9443/ws/${symbol.toLowerCase()}@kline_1m`);
+            ws.onmessage = (e) => {
+                const price = parseFloat(JSON.parse(e.data).k.c);
+                document.getElementById('mainPrice').innerText = price.toFixed(2);
+                [histW, histD, hist4].forEach(h => { if(h.length) h[h.length-1].c = price; });
+                requestAnimationFrame(refreshEngines);
+            };
+        }
+
+        function refreshEngines() {
+            runEngine(histW, chartW, 'targetW', 'scoreW', 'labelW');
+            runEngine(histD, chartD, 'targetD', 'scoreD', 'labelD');
+            runEngine(hist4, chart4, 'target4', 'score4', 'label4');
+        }
+
+        function runEngine(history, chartObj, targetId, scoreId, labelId) {
+            if(history.length < 100) return;
+            const patternLen = 40, forecastLen = 40;
+            const currentNorm = normalize(history.slice(-patternLen));
+            let bestScore = Infinity, bestIndex = -1;
+
+            for(let i=0; i < history.length - patternLen - forecastLen; i++) {
+                const score = calcEuclidean(currentNorm, normalize(history.slice(i, i + patternLen)));
+                if(score < bestScore) { bestScore = score; bestIndex = i; }
+            }
+
+            if(bestIndex !== -1) {
+                const future = history.slice(bestIndex + patternLen, bestIndex + patternLen + forecastLen);
+                const projection = [];
+                let lastVal = history[history.length-1].c, lastTime = history[history.length-1].x;
+                let baseRef = history[bestIndex + patternLen - 1].c, step = history[1].x - history[0].x;
+                
+                let pointsAbove = 0;
+                let pointsBelow = 0;
+                let prices = [];
+
+                for(let k=0; k < future.length; k++) {
+                    let p = lastVal * (future[k].c / baseRef);
+                    prices.push(p);
+                    projection.push({ x: lastTime + ((k+1) * step), y: p });
+                    
+                    // Contagem de pontos em relação ao fechamento atual
+                    if(p > lastVal) pointsAbove++;
+                    else pointsBelow++;
+                }
+
+                // --- LÓGICA DE MAIORIA DOS PONTOS ---
+                const isBull = pointsAbove >= pointsBelow;
+                const elT = document.getElementById(targetId);
+                const elL = document.getElementById(labelId);
+
+                if (isBull) {
+                    elT.innerText = Math.max(...prices).toFixed(2);
+                    elT.style.color = '#00ff41';
+                    elL.innerText = "ALVO MÁXIMO:";
+                } else {
+                    elT.innerText = Math.min(...prices).toFixed(2);
+                    elT.style.color = '#ff1744';
+                    elL.innerText = "ALVO MÍNIMO:";
+                }
+
+                draw(chartObj, history, projection, isBull);
+                
+                let confidence = Math.max(8, 100 - (Math.pow(bestScore, 0.4) * 200));
+                document.getElementById(scoreId).innerText = Math.min(98, confidence).toFixed(0) + "%";
+            }
+        }
+
+        function normalize(data) { const start = data[0].c; return data.map(d => (d.c - start)/start); }
+        function calcEuclidean(a, b) { let sum = 0; for(let i=0; i<a.length; i++) sum += (a[i]-b[i])**2; return sum; }
+
+        function draw(chart, hist, proj, isBull) {
+            const zoom = chart.canvas.id === 'chartW' ? 80 : 50;
+            const view = hist.slice(-zoom);
+            chart.data.datasets[0].data = view.map(d => ({x: d.x, y: d.c}));
+            chart.data.datasets[1].data = [{x: view[view.length-1].x, y: view[view.length-1].c}, ...proj];
+            
+            chart.data.datasets[1].borderColor = isBull ? '#00ff41' : '#ff1744';
+            chart.data.datasets[1].backgroundColor = isBull ? 'rgba(0,255,65,0.1)' : 'rgba(255,23,68,0.1)';
+            chart.update('none');
+        }
+
+        function initCharts() {
+            Chart.defaults.font.size = 14; Chart.defaults.font.weight = 'bold'; Chart.defaults.color = '#888';
+            const opts = {
+                responsive: true, maintainAspectRatio: false, animation: false,
+                interaction: { intersect: false, mode: 'index' },
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { type: 'time', grid: { color: '#222' }, ticks: { color: '#666', maxRotation:0 } },
+                    y: { position: 'right', grid: { color: '#222' }, ticks: { color: '#fff', font: {size: 15} } }
+                }
+            };
+            const ds = [{ label: 'Preço', data: [], borderColor: '#fff', borderWidth: 3, pointRadius: 0 }, { label: 'Fractal', data: [], borderColor: '#00ff41', borderWidth: 4, borderDash: [4,4], pointRadius: 0, fill: true }];
+            chartW = new Chart(document.getElementById('chartW').getContext('2d'), { type: 'line', data: { datasets: JSON.parse(JSON.stringify(ds)) }, options: opts });
+            chartD = new Chart(document.getElementById('chartD').getContext('2d'), { type: 'line', data: { datasets: JSON.parse(JSON.stringify(ds)) }, options: opts });
+            chart4 = new Chart(document.getElementById('chart4').getContext('2d'), { type: 'line', data: { datasets: JSON.parse(JSON.stringify(ds)) }, options: opts });
+        }
+    </script>
+</body>
+</html>
