@@ -2,212 +2,212 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SKYNET V15 - COMMAND CENTER</title>
+    <title>SKYNET V51 - CONVERGÊNCIA PURA</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
     <style>
-        body { background-color: #000; color: #fff; font-family: 'Verdana', sans-serif; margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-        .toolbar { background: #050505; border-bottom: 2px solid #333; padding: 5px 20px; display: flex; align-items: center; justify-content: space-between; height: 60px; flex-shrink: 0; }
-        .logo { font-size: 1.6rem; font-weight: 900; letter-spacing: 2px; }
-        .logo span { color: #00ff41; }
-        .inputs { display: flex; gap: 15px; align-items: center; }
-        input { background: #111; border: 2px solid #444; color: #fff; padding: 8px; font-size: 1.2rem; font-weight: bold; text-align: center; width: 110px; border-radius: 4px; }
-        button { background: #00ff41; color: #000; border: none; padding: 10px 25px; font-size: 1rem; font-weight: 900; border-radius: 4px; cursor: pointer; text-transform: uppercase; }
-        button:hover { background: #fff; }
-        .live-price-box { text-align: right; }
-        .live-label { font-size: 0.7rem; color: #888; font-weight: bold; }
-        .live-price { font-size: 2rem; font-weight: bold; color: #fff; font-family: monospace; }
-        .main-container { flex: 1; display: flex; width: 100%; height: 100%; overflow: hidden; }
-        .left-column { width: 55%; border-right: 4px solid #222; display: flex; flex-direction: column; position: relative; }
+        body { background-color: #000; color: #fff; font-family: 'Verdana', sans-serif; margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; touch-action: none; }
+        .toolbar { background: #050505; border-bottom: 2px solid #333; padding: 5px 15px; display: flex; align-items: center; justify-content: space-between; height: 60px; flex-shrink: 0; }
+        .logo-sub { font-size: 0.65rem; color: #00ff41; font-weight: 900; }
+        .live-price { font-size: 1.4rem; font-weight: bold; font-family: monospace; color: #00ff41; }
+        .main-container { flex: 1; display: flex; width: 100%; height: 100%; overflow: hidden; position: relative; }
+        .left-column { width: 55%; border-right: 2px solid #222; display: flex; flex-direction: column; position: relative; }
         .right-column { width: 45%; display: flex; flex-direction: column; }
-        .right-top, .right-bottom { flex: 1; display: flex; flex-direction: column; position: relative; }
-        .right-top { border-bottom: 4px solid #222; }
-        .screen-header { padding: 8px 15px; background: #0a0a0a; border-bottom: 1px solid #222; display: flex; justify-content: space-between; align-items: center; }
-        .screen-title { color: #00ff41; font-size: 1.1rem; font-weight: 900; text-transform: uppercase; }
-        .status-txt { font-size: 0.9rem; color: #666; font-weight: bold; }
-        .chart-area { flex: 1; position: relative; width: 100%; background: #000; }
-        .hud-tag { position: absolute; top: 15px; left: 15px; pointer-events: none; background: rgba(0, 0, 0, 0.85); border-left: 5px solid #00ff41; padding: 10px; border-radius: 4px; z-index: 10; }
-        .hud-line { font-size: 0.85rem; color: #ccc; margin-bottom: 2px; font-weight: bold; }
-        .hud-val { font-size: 1.4rem; font-weight: 900; color: #fff; }
+        .right-top, .right-bottom { flex: 1; display: flex; flex-direction: column; position: relative; border-bottom: 2px solid #222; }
+        .chart-container { flex: 1; position: relative; background: #000; overflow: hidden; cursor: crosshair; }
+        .time-label { position: absolute; top: 5px; left: 5px; font-size: 0.7rem; font-weight: 900; color: #00ff41; z-index: 11; }
+        .hud-tag { position: absolute; top: 25px; left: 5px; pointer-events: none; background: rgba(0,0,0,0.9); border-left: 3px solid #00ff41; padding: 6px 12px; border-radius: 4px; z-index: 10; border: 1px solid #333; min-width: 170px; }
+        .reset-btn { position: absolute; top: 5px; right: 5px; background: rgba(0, 255, 65, 0.1); border: 1px solid #00ff41; color: #00ff41; padding: 4px 10px; font-size: 0.6rem; cursor: pointer; z-index: 1000; border-radius: 3px; font-weight: bold; }
+        .val-atual { color: #00ff41; font-weight: 900; font-size: 1rem; }
+        .val-conv { font-weight: 900; font-size: 0.85rem; margin-top: 2px; transition: color 0.3s; }
+        .dif-text { font-size: 0.65rem; color: #888; }
     </style>
 </head>
 <body>
     <div class="toolbar">
-        <div class="logo">SKYNET <span>COMMAND</span></div>
-        <div class="inputs"><input type="text" id="symbol" value="BTCBRL"><button onclick="startSystem()">SCAN</button></div>
-        <div class="live-price-box"><div class="live-label">PREÇO TEMPO REAL</div><div class="live-price" id="mainPrice">---.--</div></div>
+        <div style="line-height:1"><div style="font-size:1.1rem; font-weight:900;">SKYNET</div><div class="logo-sub">PURE CONVERGENCE V51</div></div>
+        <div class="inputs">
+            <input type="text" id="symbol" value="BTCBRL" style="background:#111; border:1px solid #444; color:#fff; padding:5px; width:75px; text-align:center;">
+            <button onclick="startSystem()" style="background:#00ff41; color:#000; border:none; padding:6px 12px; font-weight:900; cursor:pointer; border-radius:4px; margin-left:5px;">SCAN</button>
+        </div>
+        <div class="live-price" id="mainPrice">---.---</div>
     </div>
     <div class="main-container">
         <div class="left-column">
-            <div class="screen-header"><span class="screen-title">VISÃO MACRO (SEMANAL)</span><span class="status-txt" id="infoW">---</span></div>
-            <div class="chart-area">
-                <div class="hud-tag">
-                    <div class="hud-line" id="labelW">ALVO:</div>
-                    <div class="hud-val" id="targetW">---</div>
-                    <div class="hud-line" style="margin-top:5px;">CONF: <span id="scoreW" style="color:#00ff41;">---</span></div>
-                </div>
-                <canvas id="chartW"></canvas>
-            </div>
+            <div class="time-label">W1 - SEMANAL (2/6/10/14 SEM)</div>
+            <button class="reset-btn" onclick="resetScale('W')">RESET</button>
+            <div class="chart-container"><div class="hud-tag"><div id="targetW" class="val-atual">ATUAL: ---</div><div id="convW" class="val-conv">CONV: ---</div><div id="diffW" class="dif-text">DIF: ---</div></div><canvas id="chartW"></canvas></div>
         </div>
         <div class="right-column">
             <div class="right-top">
-                <div class="screen-header"><span class="screen-title">DIÁRIO (MÉDIO PRAZO)</span><span class="status-txt" id="infoD">---</span></div>
-                <div class="chart-area">
-                    <div class="hud-tag">
-                        <div class="hud-line" id="labelD">ALVO:</div>
-                        <div class="hud-val" id="targetD">---</div>
-                        <div class="hud-line" style="margin-top:5px;">CONF: <span id="scoreD" style="color:#00ff41;">---</span></div>
-                    </div>
-                    <canvas id="chartD"></canvas>
-                </div>
+                <div class="time-label">D1 - DIÁRIO (1/2/3/4 SEM)</div>
+                <button class="reset-btn" onclick="resetScale('D')">RESET</button>
+                <div class="chart-container"><div class="hud-tag"><div id="targetD" class="val-atual">ATUAL: ---</div><div id="convD" class="val-conv">CONV: ---</div><div id="diffD" class="dif-text">DIF: ---</div></div><canvas id="chartD"></canvas></div>
             </div>
             <div class="right-bottom">
-                <div class="screen-header"><span class="screen-title">H4 (CURTO PRAZO)</span><span class="status-txt" id="info4">---</span></div>
-                <div class="chart-area">
-                    <div class="hud-tag">
-                        <div class="hud-line" id="label4">ALVO:</div>
-                        <div class="hud-val" id="target4">---</div>
-                        <div class="hud-line" style="margin-top:5px;">CONF: <span id="score4" style="color:#00ff41;">---</span></div>
-                    </div>
-                    <canvas id="chart4"></canvas>
-                </div>
+                <div class="time-label">H4 - 4H (8/16/24/32 CANDLES)</div>
+                <button class="reset-btn" onclick="resetScale('4')">RESET</button>
+                <div class="chart-container"><div class="hud-tag"><div id="target4" class="val-atual">ATUAL: ---</div><div id="conv4" class="val-conv">CONV: ---</div><div id="diff4" class="dif-text">DIF: ---</div></div><canvas id="chart4"></canvas></div>
             </div>
         </div>
     </div>
-    <script>
-        let chartW, chartD, chart4;
-        let ws;
-        let histW = [], histD = [], hist4 = [];
 
-        window.onload = () => { initCharts(); startSystem(); };
+    <script>
+        let charts = {}, hists = { W: [], D: [], '4': [] };
+        let ws;
+        const colors = ['#00FFFF', '#FF00FF', '#FFFF00', '#FF8C00'];
+
+        function resetScale(key) {
+            const chart = charts[key];
+            if(!chart) return;
+            chart.options.scales.x.min = undefined; chart.options.scales.x.max = undefined;
+            chart.options.scales.y.min = undefined; chart.options.scales.y.max = undefined;
+            chart.update();
+        }
 
         async function startSystem() {
             if(ws) ws.close();
             const symbol = document.getElementById('symbol').value.toUpperCase();
-            setLoading(true);
-            try {
-                const [resW, resD, res4] = await Promise.all([
-                    fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1w&limit=1000`),
-                    fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1d&limit=1000`),
-                    fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=4h&limit=1000`)
-                ]);
-                histW = parseData(await resW.json());
-                histD = parseData(await resD.json());
-                hist4 = parseData(await res4.json());
-                setLoading(false);
-                connectStream(symbol);
-                refreshEngines();
-            } catch (e) { console.error(e); }
-        }
-
-        function parseData(apiData) { return apiData.map(d => ({ x: d[0], c: parseFloat(d[4]) })); }
-
-        function setLoading(state) {
-            const txt = state ? "CARREGANDO..." : "RASTREAMENTO ATIVO";
-            const col = state ? "#e6e600" : "#00ff41";
-            ['infoW', 'infoD', 'info4'].forEach(id => { document.getElementById(id).innerText = txt; document.getElementById(id).style.color = col; });
+            const fetchK = async (i) => {
+                const r = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${i}&limit=600`);
+                return (await r.json()).map(d => ({ x: d[0], c: parseFloat(d[4]) }));
+            };
+            hists.W = await fetchK('1w'); hists.D = await fetchK('1d'); hists['4'] = await fetchK('4h');
+            connectStream(symbol); refreshEngines();
         }
 
         function connectStream(symbol) {
             ws = new WebSocket(`wss://stream.binance.com:9443/ws/${symbol.toLowerCase()}@kline_1m`);
             ws.onmessage = (e) => {
-                const price = parseFloat(JSON.parse(e.data).k.c);
-                document.getElementById('mainPrice').innerText = price.toFixed(2);
-                [histW, histD, hist4].forEach(h => { if(h.length) h[h.length-1].c = price; });
-                requestAnimationFrame(refreshEngines);
+                const p = parseFloat(JSON.parse(e.data).k.c);
+                document.getElementById('mainPrice').innerText = p.toLocaleString('pt-BR');
+                ['W', 'D', '4'].forEach(k => { if(hists[k].length) hists[k][hists[k].length-1].c = p; });
+                refreshEngines();
             };
         }
 
         function refreshEngines() {
-            runEngine(histW, chartW, 'targetW', 'scoreW', 'labelW');
-            runEngine(histD, chartD, 'targetD', 'scoreD', 'labelD');
-            runEngine(hist4, chart4, 'target4', 'score4', 'label4');
+            runEngine(hists.W, charts.W, 'targetW', 'diffW', 'convW', [2, 6, 10, 14]);
+            runEngine(hists.D, charts.D, 'targetD', 'diffD', 'convD', [7, 14, 21, 28]);
+            runEngine(hists['4'], charts['4'], 'target4', 'diff4', 'conv4', [8, 16, 24, 32]);
         }
 
-        function runEngine(history, chartObj, targetId, scoreId, labelId) {
-            if(history.length < 100) return;
-            const patternLen = 40, forecastLen = 40;
-            const currentNorm = normalize(history.slice(-patternLen));
-            let bestScore = Infinity, bestIndex = -1;
-
-            for(let i=0; i < history.length - patternLen - forecastLen; i++) {
-                const score = calcEuclidean(currentNorm, normalize(history.slice(i, i + patternLen)));
-                if(score < bestScore) { bestScore = score; bestIndex = i; }
-            }
-
-            if(bestIndex !== -1) {
-                const future = history.slice(bestIndex + patternLen, bestIndex + patternLen + forecastLen);
-                const projection = [];
-                let lastVal = history[history.length-1].c, lastTime = history[history.length-1].x;
-                let baseRef = history[bestIndex + patternLen - 1].c, step = history[1].x - history[0].x;
-                
-                let pointsAbove = 0;
-                let pointsBelow = 0;
-                let prices = [];
-
-                for(let k=0; k < future.length; k++) {
-                    let p = lastVal * (future[k].c / baseRef);
-                    prices.push(p);
-                    projection.push({ x: lastTime + ((k+1) * step), y: p });
-                    
-                    // Contagem de pontos em relação ao fechamento atual
-                    if(p > lastVal) pointsAbove++;
-                    else pointsBelow++;
-                }
-
-                // --- LÓGICA DE MAIORIA DOS PONTOS ---
-                const isBull = pointsAbove >= pointsBelow;
-                const elT = document.getElementById(targetId);
-                const elL = document.getElementById(labelId);
-
-                if (isBull) {
-                    elT.innerText = Math.max(...prices).toFixed(2);
-                    elT.style.color = '#00ff41';
-                    elL.innerText = "ALVO MÁXIMO:";
-                } else {
-                    elT.innerText = Math.min(...prices).toFixed(2);
-                    elT.style.color = '#ff1744';
-                    elL.innerText = "ALVO MÍNIMO:";
-                }
-
-                draw(chartObj, history, projection, isBull);
-                
-                let confidence = Math.max(8, 100 - (Math.pow(bestScore, 0.4) * 200));
-                document.getElementById(scoreId).innerText = Math.min(98, confidence).toFixed(0) + "%";
-            }
+        function calculateExtremeTarget(points, baseline) {
+            let countAbove = points.filter(p => p.y > baseline).length;
+            let values = points.map(p => p.y);
+            return (countAbove > points.length / 2) ? Math.max(...values) : Math.min(...values);
         }
 
-        function normalize(data) { const start = data[0].c; return data.map(d => (d.c - start)/start); }
-        function calcEuclidean(a, b) { let sum = 0; for(let i=0; i<a.length; i++) sum += (a[i]-b[i])**2; return sum; }
+        function runEngine(hist, chart, tid, sid, cid, offsets) {
+            if(hist.length < 200) return;
+            const pLen = 40, fLen = 40;
+            const step = hist[1].x - hist[0].x;
 
-        function draw(chart, hist, proj, isBull) {
-            const zoom = chart.canvas.id === 'chartW' ? 80 : 50;
-            const view = hist.slice(-zoom);
-            chart.data.datasets[0].data = view.map(d => ({x: d.x, y: d.c}));
-            chart.data.datasets[1].data = [{x: view[view.length-1].x, y: view[view.length-1].c}, ...proj];
-            
-            chart.data.datasets[1].borderColor = isBull ? '#00ff41' : '#ff1744';
-            chart.data.datasets[1].backgroundColor = isBull ? 'rgba(0,255,65,0.1)' : 'rgba(255,23,68,0.1)';
+            const getProj = (offset) => {
+                const idx = hist.length - 1 - offset;
+                const cur = normalize(hist.slice(idx - pLen, idx));
+                let bScore = Infinity, bIdx = -1;
+                for(let i=0; i < idx - pLen - fLen - 5; i++) {
+                    const s = calcE(cur, normalize(hist.slice(i, i + pLen)));
+                    if(s < bScore) { bScore = s; bIdx = i; }
+                }
+                if(bIdx === -1) return null;
+                const fut = hist.slice(bIdx + pLen, bIdx + pLen + fLen);
+                let lV = hist[idx].c, lT = hist[idx].x, bR = hist[bIdx + pLen - 1].c;
+                return { points: fut.map((d, k) => ({ x: lT + ((k+1) * step), y: lV * (d.c / bR) })), baseline: lV };
+            };
+
+            const main = getProj(0);
+            if(!main) return;
+            const traces = offsets.map(o => getProj(o));
+
+            const mainExtreme = calculateExtremeTarget(main.points, main.baseline);
+            document.getElementById(tid).innerText = `ATUAL: R$ ${mainExtreme.toLocaleString('pt-BR', {maximumFractionDigits:0})}`;
+
+            let minDiff = Infinity;
+            let bestIdx = -1;
+
+            traces.forEach((t, i) => {
+                if(!t) return;
+                const tExtreme = calculateExtremeTarget(t.points, t.baseline);
+                const diff = Math.abs((mainExtreme - tExtreme) / mainExtreme);
+                if(diff < minDiff) {
+                    minDiff = diff;
+                    bestIdx = i;
+                }
+                // Reseta espessura para Ultra-Fina
+                chart.data.datasets[i+2].borderWidth = 0.5;
+            });
+
+            if(bestIdx !== -1) {
+                // Destaca a escolhida
+                chart.data.datasets[bestIdx+2].borderWidth = 2;
+                const convExtreme = calculateExtremeTarget(traces[bestIdx].points, traces[bestIdx].baseline);
+                const convEl = document.getElementById(cid);
+                convEl.innerText = `CONV: R$ ${convExtreme.toLocaleString('pt-BR', {maximumFractionDigits:0})}`;
+                convEl.style.color = colors[bestIdx]; // Cor do alvo = Cor da linha
+                
+                const dDisplay = ((mainExtreme - calculateExtremeTarget(traces[0].points, traces[0].baseline)) / mainExtreme * 100).toFixed(2);
+                document.getElementById(sid).innerText = `DIF: ${dDisplay}%`;
+            }
+
+            chart.data.datasets[0].data = hist.slice(-120).map(d => ({x: d.x, y: d.c}));
+            chart.data.datasets[1].data = [{x: hist[hist.length-1].x, y: hist[hist.length-1].c}, ...main.points];
+            for(let i=0; i<4; i++) chart.data.datasets[i+2].data = traces[i] ? traces[i].points : [];
             chart.update('none');
         }
 
+        function normalize(d) { const s = d[0].c; return d.map(v => (v.c - s)/s); }
+        function calcE(a, b) { let s = 0; for(let i=0; i<a.length; i++) s += (a[i]-b[i])**2; return s; }
+
         function initCharts() {
-            Chart.defaults.font.size = 14; Chart.defaults.font.weight = 'bold'; Chart.defaults.color = '#888';
-            const opts = {
-                responsive: true, maintainAspectRatio: false, animation: false,
-                interaction: { intersect: false, mode: 'index' },
-                plugins: { legend: { display: false } },
-                scales: {
-                    x: { type: 'time', grid: { color: '#222' }, ticks: { color: '#666', maxRotation:0 } },
-                    y: { position: 'right', grid: { color: '#222' }, ticks: { color: '#fff', font: {size: 15} } }
-                }
-            };
-            const ds = [{ label: 'Preço', data: [], borderColor: '#fff', borderWidth: 3, pointRadius: 0 }, { label: 'Fractal', data: [], borderColor: '#00ff41', borderWidth: 4, borderDash: [4,4], pointRadius: 0, fill: true }];
-            chartW = new Chart(document.getElementById('chartW').getContext('2d'), { type: 'line', data: { datasets: JSON.parse(JSON.stringify(ds)) }, options: opts });
-            chartD = new Chart(document.getElementById('chartD').getContext('2d'), { type: 'line', data: { datasets: JSON.parse(JSON.stringify(ds)) }, options: opts });
-            chart4 = new Chart(document.getElementById('chart4').getContext('2d'), { type: 'line', data: { datasets: JSON.parse(JSON.stringify(ds)) }, options: opts });
+            ['W', 'D', '4'].forEach(k => {
+                const canvas = document.getElementById(`chart${k}`);
+                const ds = [
+                    { label: 'Real', data: [], borderColor: '#FFF', borderWidth: 1, pointRadius: 0, hitRadius: 20 },
+                    { label: 'Atual', data: [], borderColor: '#00FF41', borderWidth: 2, borderDash: [2,1], pointRadius: 0, hitRadius: 20 }
+                ];
+                for(let i=0; i<4; i++) ds.push({ label: `Rastro`, data: [], borderColor: colors[i], borderWidth: 0.5, borderDash: [4,2], pointRadius: 0, hitRadius: 20 });
+
+                charts[k] = new Chart(canvas.getContext('2d'), {
+                    type: 'line',
+                    data: { datasets: ds },
+                    options: {
+                        responsive: true, maintainAspectRatio: false, animation: false,
+                        interaction: { mode: 'nearest', intersect: true, axis: 'xy' },
+                        scales: { x: { type: 'time', grid: { display: false }, ticks: { color: '#333' } }, y: { position: 'right', grid: { color: '#0a0a0a' }, ticks: { color: '#666' } } },
+                        plugins: { legend: { display: false }, tooltip: { enabled: true, backgroundColor: 'rgba(0,0,0,0.95)', titleColor: '#00ff41', callbacks: { label: (ctx) => `R$ ${ctx.parsed.y.toLocaleString('pt-BR')}` } } }
+                    }
+                });
+
+                let state = { drag: false, lx: 0, ly: 0 };
+                const move = (ex, ey) => {
+                    if(!state.drag) return;
+                    const s = charts[k].scales;
+                    const dx = ((ex - state.lx) / s.x.width) * (s.x.max - s.x.min);
+                    const dy = ((ey - state.ly) / s.y.height) * (s.y.max - s.y.min);
+                    charts[k].options.scales.x.min = (charts[k].options.scales.x.min || s.x.min) - dx;
+                    charts[k].options.scales.x.max = (charts[k].options.scales.x.max || s.x.max) - dx;
+                    charts[k].options.scales.y.min = (charts[k].options.scales.y.min || s.y.min) + dy;
+                    charts[k].options.scales.y.max = (charts[k].options.scales.y.max || s.y.max) + dy;
+                    state.lx = ex; state.ly = ey;
+                    charts[k].update('none');
+                };
+                canvas.addEventListener('mousedown', e => { state.drag = true; state.lx = e.clientX; state.ly = e.clientY; });
+                window.addEventListener('mouseup', () => state.drag = false);
+                canvas.addEventListener('mousemove', e => move(e.clientX, e.clientY));
+                canvas.addEventListener('wheel', e => {
+                    e.preventDefault();
+                    const s = charts[k].scales, f = e.deltaY > 0 ? 1.1 : 0.9;
+                    const xr = (s.x.max - s.x.min) * f, yr = (s.y.max - s.y.min) * f;
+                    const xm = (s.x.max + s.x.min)/2, ym = (s.y.max + s.y.min)/2;
+                    charts[k].options.scales.x.min = xm - xr/2; charts[k].options.scales.x.max = xm + xr/2;
+                    charts[k].options.scales.y.min = ym - yr/2; charts[k].options.scales.y.max = ym + yr/2;
+                    charts[k].update('none');
+                }, {passive: false});
+            });
         }
+        window.onload = () => { initCharts(); startSystem(); };
     </script>
 </body>
 </html>
