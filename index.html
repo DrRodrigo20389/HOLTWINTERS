@@ -34,13 +34,13 @@
     </div>
     <div class="main-container">
         <div class="left-column">
-            <div class="time-label">W1 - SEMANAL (2/6/10/14 SEM)</div>
+            <div class="time-label">W1 - SEMANAL (1/2/3/4 SEM)</div>
             <button class="reset-btn" onclick="resetScale('W')">RESET</button>
             <div class="chart-container"><div class="hud-tag"><div id="targetW" class="val-atual">ATUAL: ---</div><div id="convW" class="val-conv">CONV: ---</div><div id="diffW" class="dif-text">DIF: ---</div></div><canvas id="chartW"></canvas></div>
         </div>
         <div class="right-column">
             <div class="right-top">
-                <div class="time-label">D1 - DIÁRIO (1/2/3/4 SEM)</div>
+                <div class="time-label">D1 - DIÁRIO (3/6/9/12 DIAS)</div>
                 <button class="reset-btn" onclick="resetScale('D')">RESET</button>
                 <div class="chart-container"><div class="hud-tag"><div id="targetD" class="val-atual">ATUAL: ---</div><div id="convD" class="val-conv">CONV: ---</div><div id="diffD" class="dif-text">DIF: ---</div></div><canvas id="chartD"></canvas></div>
             </div>
@@ -87,8 +87,13 @@
         }
 
         function refreshEngines() {
-            runEngine(hists.W, charts.W, 'targetW', 'diffW', 'convW', [2, 6, 10, 14]);
-            runEngine(hists.D, charts.D, 'targetD', 'diffD', 'convD', [7, 14, 21, 28]);
+            // AJUSTE SOLICITADO: Semanal a cada 1 semana [1,2,3,4]
+            runEngine(hists.W, charts.W, 'targetW', 'diffW', 'convW', [1, 2, 3, 4]);
+            
+            // AJUSTE SOLICITADO: Diário a cada 3 dias [3,6,9,12]
+            runEngine(hists.D, charts.D, 'targetD', 'diffD', 'convD', [3, 6, 9, 12]);
+            
+            // MANTIDO: 4h padrão
             runEngine(hists['4'], charts['4'], 'target4', 'diff4', 'conv4', [8, 16, 24, 32]);
         }
 
@@ -135,19 +140,17 @@
                     minDiff = diff;
                     bestIdx = i;
                 }
-                // Reseta espessura para Ultra-Fina
                 chart.data.datasets[i+2].borderWidth = 0.5;
             });
 
             if(bestIdx !== -1) {
-                // Destaca a escolhida
                 chart.data.datasets[bestIdx+2].borderWidth = 2;
                 const convExtreme = calculateExtremeTarget(traces[bestIdx].points, traces[bestIdx].baseline);
                 const convEl = document.getElementById(cid);
                 convEl.innerText = `CONV: R$ ${convExtreme.toLocaleString('pt-BR', {maximumFractionDigits:0})}`;
-                convEl.style.color = colors[bestIdx]; // Cor do alvo = Cor da linha
+                convEl.style.color = colors[bestIdx]; 
                 
-                const dDisplay = ((mainExtreme - calculateExtremeTarget(traces[0].points, traces[0].baseline)) / mainExtreme * 100).toFixed(2);
+                const dDisplay = ((mainExtreme - calculateExtremeTarget(traces[bestIdx].points, traces[bestIdx].baseline)) / mainExtreme * 100).toFixed(2);
                 document.getElementById(sid).innerText = `DIF: ${dDisplay}%`;
             }
 
