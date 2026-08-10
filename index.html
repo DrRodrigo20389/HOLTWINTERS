@@ -2,99 +2,129 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>SKYNET V51 - CONVERGÊNCIA PURA</title>
+    <title>SKYNET V51 - SEMANAL PURE SNAPSHOT</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
     <style>
         body { background-color: #000; color: #fff; font-family: 'Verdana', sans-serif; margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; touch-action: none; }
         .toolbar { background: #050505; border-bottom: 2px solid #333; padding: 5px 15px; display: flex; align-items: center; justify-content: space-between; height: 60px; flex-shrink: 0; }
         .logo-sub { font-size: 0.65rem; color: #00ff41; font-weight: 900; }
-        .live-price { font-size: 1.4rem; font-weight: bold; font-family: monospace; color: #00ff41; }
-        .main-container { flex: 1; display: flex; width: 100%; height: 100%; overflow: hidden; position: relative; }
-        .left-column { width: 55%; border-right: 2px solid #222; display: flex; flex-direction: column; position: relative; }
-        .right-column { width: 45%; display: flex; flex-direction: column; }
-        .right-top, .right-bottom { flex: 1; display: flex; flex-direction: column; position: relative; border-bottom: 2px solid #222; }
-        .chart-container { flex: 1; position: relative; background: #000; overflow: hidden; cursor: crosshair; }
-        .time-label { position: absolute; top: 5px; left: 5px; font-size: 0.7rem; font-weight: 900; color: #00ff41; z-index: 11; }
-        .hud-tag { position: absolute; top: 25px; left: 5px; pointer-events: none; background: rgba(0,0,0,0.9); border-left: 3px solid #00ff41; padding: 6px 12px; border-radius: 4px; z-index: 10; border: 1px solid #333; min-width: 170px; }
-        .reset-btn { position: absolute; top: 5px; right: 5px; background: rgba(0, 255, 65, 0.1); border: 1px solid #00ff41; color: #00ff41; padding: 4px 10px; font-size: 0.6rem; cursor: pointer; z-index: 1000; border-radius: 3px; font-weight: bold; }
-        .val-atual { color: #00ff41; font-weight: 900; font-size: 1rem; }
-        .val-conv { font-weight: 900; font-size: 0.85rem; margin-top: 2px; transition: color 0.3s; }
-        .dif-text { font-size: 0.65rem; color: #888; }
+        .live-price { font-size: 1.2rem; font-weight: bold; font-family: monospace; color: #00ff41; }
+        .main-container { flex: 1; width: 100%; height: 100%; overflow: hidden; position: relative; }
+        .chart-container { width: 100%; height: 100%; position: relative; background: #000; overflow: hidden; cursor: crosshair; }
+        .time-label { position: absolute; top: 10px; left: 15px; font-size: 0.85rem; font-weight: 900; color: #00ff41; z-index: 11; }
+        .hud-tag { position: absolute; top: 35px; left: 15px; pointer-events: none; background: rgba(0,0,0,0.9); border-left: 3px solid #00ff41; padding: 8px 15px; border-radius: 4px; z-index: 10; border: 1px solid #333; min-width: 200px; }
+        .reset-btn { position: absolute; top: 10px; right: 15px; background: rgba(0, 255, 65, 0.1); border: 1px solid #00ff41; color: #00ff41; padding: 6px 14px; font-size: 0.75rem; cursor: pointer; z-index: 1000; border-radius: 3px; font-weight: bold; }
+        .val-atual { color: #00ff41; font-weight: 900; font-size: 1.1rem; }
+        .val-conv { font-weight: 900; font-size: 0.9rem; margin-top: 3px; transition: color 0.3s; }
+        .dif-text { font-size: 0.75rem; color: #888; }
+        .snap-status { font-size: 0.75rem; color: #00ffff; font-weight: bold; margin-top: 4px; }
+        
+        .time-controls { display: flex; align-items: center; gap: 8px; background: #111; padding: 4px 12px; border-radius: 4px; border: 1px solid #333; }
+        .time-btn { background: #222; border: 1px solid #00ff41; color: #00ff41; padding: 5px 10px; font-size: 0.8rem; font-weight: bold; cursor: pointer; border-radius: 3px; }
+        .time-btn:hover { background: #00ff41; color: #000; }
+        .time-btn-reset { border-color: #ff3333; color: #ff3333; }
+        .time-btn-reset:hover { background: #ff3333; color: #fff; }
     </style>
 </head>
 <body>
     <div class="toolbar">
-        <div style="line-height:1"><div style="font-size:1.1rem; font-weight:900;">SKYNET</div><div class="logo-sub">PURE CONVERGENCE V51</div></div>
-        <div class="inputs">
-            <input type="text" id="symbol" value="BTCBRL" style="background:#111; border:1px solid #444; color:#fff; padding:5px; width:75px; text-align:center;">
-            <button onclick="startSystem()" style="background:#00ff41; color:#000; border:none; padding:6px 12px; font-weight:900; cursor:pointer; border-radius:4px; margin-left:5px;">SCAN</button>
+        <div style="line-height:1">
+            <div style="font-size:1.2rem; font-weight:900;">SKYNET</div>
+            <div class="logo-sub">W1 EXCLUSIVE - PURE SNAPSHOT ENGINE</div>
         </div>
+        
+        <div class="inputs">
+            <input type="text" id="symbol" value="BTCBRL" style="background:#111; border:1px solid #444; color:#fff; padding:6px; width:85px; text-align:center; font-weight:bold;">
+            <button onclick="startSystem()" style="background:#00ff41; color:#000; border:none; padding:7px 14px; font-weight:900; cursor:pointer; border-radius:4px; margin-left:5px;">SCAN</button>
+        </div>
+
+        <div class="time-controls">
+            <button class="time-btn" onclick="stepTime(1)">◀ -1 Semanal</button>
+            <button class="time-btn" onclick="stepTime(-1)">+1 Semanal ▶</button>
+            <button class="time-btn time-btn-reset" onclick="resetTime()">LIVE</button>
+        </div>
+
         <div class="live-price" id="mainPrice">---.---</div>
     </div>
+
     <div class="main-container">
-        <div class="left-column">
-            <div class="time-label">W1 - SEMANAL (1/2/3/4 SEM)</div>
-            <button class="reset-btn" onclick="resetScale('W')">RESET</button>
-            <div class="chart-container"><div class="hud-tag"><div id="targetW" class="val-atual">ATUAL: ---</div><div id="convW" class="val-conv">CONV: ---</div><div id="diffW" class="dif-text">DIF: ---</div></div><canvas id="chartW"></canvas></div>
-        </div>
-        <div class="right-column">
-            <div class="right-top">
-                <div class="time-label">D1 - DIÁRIO (3/6/9/12 DIAS)</div>
-                <button class="reset-btn" onclick="resetScale('D')">RESET</button>
-                <div class="chart-container"><div class="hud-tag"><div id="targetD" class="val-atual">ATUAL: ---</div><div id="convD" class="val-conv">CONV: ---</div><div id="diffD" class="dif-text">DIF: ---</div></div><canvas id="chartD"></canvas></div>
+        <div class="chart-container">
+            <div class="time-label">W1 - VISÃO SEMANAL (EXCLUSIVA)</div>
+            <button class="reset-btn" onclick="resetScale()">RESET ESCALA</button>
+            <div class="hud-tag">
+                <div id="targetW" class="val-atual">ATUAL: ---</div>
+                <div id="convW" class="val-conv">CONV: ---</div>
+                <div id="diffW" class="dif-text">DIF: ---</div>
+                <div id="snapW" class="snap-status">SNAP: NENHUM</div>
             </div>
-            <div class="right-bottom">
-                <div class="time-label">H4 - 4H (8/16/24/32 CANDLES)</div>
-                <button class="reset-btn" onclick="resetScale('4')">RESET</button>
-                <div class="chart-container"><div class="hud-tag"><div id="target4" class="val-atual">ATUAL: ---</div><div id="conv4" class="val-conv">CONV: ---</div><div id="diff4" class="dif-text">DIF: ---</div></div><canvas id="chart4"></canvas></div>
-            </div>
+            <canvas id="chartW"></canvas>
         </div>
     </div>
 
     <script>
-        let charts = {}, hists = { W: [], D: [], '4': [] };
+        let chartW, histW = [];
         let ws;
+        let timeShift = 0;
         const colors = ['#00FFFF', '#FF00FF', '#FFFF00', '#FF8C00'];
 
-        function resetScale(key) {
-            const chart = charts[key];
-            if(!chart) return;
-            chart.options.scales.x.min = undefined; chart.options.scales.x.max = undefined;
-            chart.options.scales.y.min = undefined; chart.options.scales.y.max = undefined;
-            chart.update();
+        let singleSnapshotW = null;
+
+        function resetScale() {
+            if(!chartW) return;
+            chartW.options.scales.x.min = undefined; chartW.options.scales.x.max = undefined;
+            chartW.options.scales.y.min = undefined; chartW.options.scales.y.max = undefined;
+            chartW.update();
         }
+
+        function stepTime(delta) {
+            timeShift = Math.max(0, timeShift + delta);
+            refreshEngine();
+        }
+
+        function resetTime() {
+            timeShift = 0;
+            refreshEngine();
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') stepTime(1);
+            if (e.key === 'ArrowRight') stepTime(-1);
+        });
 
         async function startSystem() {
             if(ws) ws.close();
             const symbol = document.getElementById('symbol').value.toUpperCase();
-            const fetchK = async (i) => {
-                const r = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${i}&limit=600`);
-                return (await r.json()).map(d => ({ x: d[0], c: parseFloat(d[4]) }));
-            };
-            hists.W = await fetchK('1w'); hists.D = await fetchK('1d'); hists['4'] = await fetchK('4h');
-            connectStream(symbol); refreshEngines();
+            singleSnapshotW = null;
+            
+            const r = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1w&limit=600`);
+            histW = (await r.json()).map(d => ({ x: d[0], c: parseFloat(d[4]) }));
+            
+            connectStream(symbol); 
+            refreshEngine();
         }
 
         function connectStream(symbol) {
             ws = new WebSocket(`wss://stream.binance.com:9443/ws/${symbol.toLowerCase()}@kline_1m`);
             ws.onmessage = (e) => {
                 const p = parseFloat(JSON.parse(e.data).k.c);
-                document.getElementById('mainPrice').innerText = p.toLocaleString('pt-BR');
-                ['W', 'D', '4'].forEach(k => { if(hists[k].length) hists[k][hists[k].length-1].c = p; });
-                refreshEngines();
+                if (timeShift === 0) {
+                    document.getElementById('mainPrice').innerText = `R$ ${p.toLocaleString('pt-BR')}`;
+                }
+                if(histW.length) histW[histW.length-1].c = p;
+                if (timeShift === 0) refreshEngine();
             };
         }
 
-        function refreshEngines() {
-            // AJUSTE SOLICITADO: Semanal a cada 1 semana [1,2,3,4]
-            runEngine(hists.W, charts.W, 'targetW', 'diffW', 'convW', [1, 2, 3, 4]);
-            
-            // AJUSTE SOLICITADO: Diário a cada 3 dias [3,6,9,12]
-            runEngine(hists.D, charts.D, 'targetD', 'diffD', 'convD', [3, 6, 9, 12]);
-            
-            // MANTIDO: 4h padrão
-            runEngine(hists['4'], charts['4'], 'target4', 'diff4', 'conv4', [8, 16, 24, 32]);
+        function refreshEngine() {
+            if (timeShift > 0) {
+                document.getElementById('mainPrice').innerText = `[VOLTANDO ${timeShift} SEMANAS]`;
+                document.getElementById('mainPrice').style.color = '#ff9900';
+            } else {
+                document.getElementById('mainPrice').style.color = '#00ff41';
+            }
+
+            runEngine(histW, chartW, 'targetW', 'diffW', 'convW', 'snapW', [1, 2, 3, 4]);
         }
 
         function calculateExtremeTarget(points, baseline) {
@@ -103,7 +133,9 @@
             return (countAbove > points.length / 2) ? Math.max(...values) : Math.min(...values);
         }
 
-        function runEngine(hist, chart, tid, sid, cid, offsets) {
+        function runEngine(histFull, chart, tid, sid, cid, snapid, offsets) {
+            const hist = timeShift > 0 ? histFull.slice(0, histFull.length - timeShift) : histFull;
+
             if(hist.length < 200) return;
             const pLen = 40, fLen = 40;
             const step = hist[1].x - hist[0].x;
@@ -129,88 +161,144 @@
             const mainExtreme = calculateExtremeTarget(main.points, main.baseline);
             document.getElementById(tid).innerText = `ATUAL: R$ ${mainExtreme.toLocaleString('pt-BR', {maximumFractionDigits:0})}`;
 
-            let minDiff = Infinity;
-            let bestIdx = -1;
+            // --- LÓGICA INTERNA DE CÁLCULO DOS RASTROS (CÁLCULO PERMANECE 100%) ---
+            let mainSlope = (main.points[main.points.length - 1].y - main.baseline) / main.baseline;
+            let validTraces = traces.filter(t => t !== null);
+            let avgTraceSlope = 0;
+            if (validTraces.length > 0) {
+                let slopes = validTraces.map(t => (t.points[t.points.length - 1].y - t.baseline) / t.baseline);
+                avgTraceSlope = slopes.reduce((a, b) => a + b, 0) / slopes.length;
+            }
 
+            let isOppositeDirection = (mainSlope * avgTraceSlope < 0);
+            let amplitudeDiff = Math.abs(mainExtreme - (validTraces.length ? calculateExtremeTarget(validTraces[0].points, validTraces[0].baseline) : mainExtreme)) / mainExtreme;
+
+            // Congela apenas o snapshot relevante
+            if (isOppositeDirection && amplitudeDiff > 0.18) {
+                singleSnapshotW = {
+                    time: hist[hist.length - 1].x,
+                    data: [{ x: hist[hist.length-1].x, y: hist[hist.length-1].c }, ...main.points]
+                };
+            }
+
+            if (singleSnapshotW) {
+                const dateSnap = new Date(singleSnapshotW.time).toLocaleDateString('pt-BR');
+                document.getElementById(snapid).innerText = `LAST SNAP: ${dateSnap}`;
+                document.getElementById(snapid).style.color = '#00ffff';
+            } else {
+                document.getElementById(snapid).innerText = `SNAP: SEM GIRO RELEVANTE`;
+                document.getElementById(snapid).style.color = '#555555';
+            }
+
+            let minDiff = Infinity, bestIdx = -1;
             traces.forEach((t, i) => {
                 if(!t) return;
                 const tExtreme = calculateExtremeTarget(t.points, t.baseline);
                 const diff = Math.abs((mainExtreme - tExtreme) / mainExtreme);
-                if(diff < minDiff) {
-                    minDiff = diff;
-                    bestIdx = i;
-                }
-                chart.data.datasets[i+2].borderWidth = 0.5;
+                if(diff < minDiff) { minDiff = diff; bestIdx = i; }
             });
 
             if(bestIdx !== -1) {
-                chart.data.datasets[bestIdx+2].borderWidth = 2;
                 const convExtreme = calculateExtremeTarget(traces[bestIdx].points, traces[bestIdx].baseline);
                 const convEl = document.getElementById(cid);
                 convEl.innerText = `CONV: R$ ${convExtreme.toLocaleString('pt-BR', {maximumFractionDigits:0})}`;
                 convEl.style.color = colors[bestIdx]; 
                 
-                const dDisplay = ((mainExtreme - calculateExtremeTarget(traces[bestIdx].points, traces[bestIdx].baseline)) / mainExtreme * 100).toFixed(2);
+                const dDisplay = ((mainExtreme - convExtreme) / mainExtreme * 100).toFixed(2);
                 document.getElementById(sid).innerText = `DIF: ${dDisplay}%`;
             }
 
+            // ATUALIZAÇÃO DOS DATASETS NO GRÁFICO
+            // Dataset 0: Preço Real (Linha Branca)
             chart.data.datasets[0].data = hist.slice(-120).map(d => ({x: d.x, y: d.c}));
+            
+            // Dataset 1: Verde Atual (Linha Verde Destaque)
             chart.data.datasets[1].data = [{x: hist[hist.length-1].x, y: hist[hist.length-1].c}, ...main.points];
-            for(let i=0; i<4; i++) chart.data.datasets[i+2].data = traces[i] ? traces[i].points : [];
+            
+            // Datasets 2..5: Rastros mantidos OCVULTOS (hidden: true)
+            for(let i=0; i<4; i++) {
+                chart.data.datasets[i+2].data = traces[i] ? traces[i].points : [];
+            }
+
+            // Dataset 6: O Único Snapshot Ativo (Linha Pontilhada Branca Espessa)
+            if (!chart.data.datasets[6]) {
+                chart.data.datasets.push({
+                    label: 'ActiveSnapshot',
+                    data: [],
+                    borderColor: '#FFFFFF',
+                    borderWidth: 2.5,
+                    borderDash: [6, 4],
+                    pointRadius: 0
+                });
+            }
+            chart.data.datasets[6].data = singleSnapshotW ? singleSnapshotW.data : [];
+
             chart.update('none');
         }
 
         function normalize(d) { const s = d[0].c; return d.map(v => (v.c - s)/s); }
         function calcE(a, b) { let s = 0; for(let i=0; i<a.length; i++) s += (a[i]-b[i])**2; return s; }
 
-        function initCharts() {
-            ['W', 'D', '4'].forEach(k => {
-                const canvas = document.getElementById(`chart${k}`);
-                const ds = [
-                    { label: 'Real', data: [], borderColor: '#FFF', borderWidth: 1, pointRadius: 0, hitRadius: 20 },
-                    { label: 'Atual', data: [], borderColor: '#00FF41', borderWidth: 2, borderDash: [2,1], pointRadius: 0, hitRadius: 20 }
-                ];
-                for(let i=0; i<4; i++) ds.push({ label: `Rastro`, data: [], borderColor: colors[i], borderWidth: 0.5, borderDash: [4,2], pointRadius: 0, hitRadius: 20 });
+        function initChart() {
+            const canvas = document.getElementById('chartW');
+            const ds = [
+                { label: 'Real', data: [], borderColor: '#FFF', borderWidth: 1.5, pointRadius: 0, hitRadius: 20 },
+                { label: 'Atual Verde', data: [], borderColor: '#00FF41', borderWidth: 2.5, pointRadius: 0, hitRadius: 20 }
+            ];
+            
+            // Adiciona os 4 rastros para o cálculo, mas com hidden: true para NÃO desenhar na tela
+            for(let i=0; i<4; i++) {
+                ds.push({ label: `Rastro_${i}`, data: [], borderColor: colors[i], borderWidth: 0, hidden: true, pointRadius: 0 });
+            }
 
-                charts[k] = new Chart(canvas.getContext('2d'), {
-                    type: 'line',
-                    data: { datasets: ds },
-                    options: {
-                        responsive: true, maintainAspectRatio: false, animation: false,
-                        interaction: { mode: 'nearest', intersect: true, axis: 'xy' },
-                        scales: { x: { type: 'time', grid: { display: false }, ticks: { color: '#333' } }, y: { position: 'right', grid: { color: '#0a0a0a' }, ticks: { color: '#666' } } },
-                        plugins: { legend: { display: false }, tooltip: { enabled: true, backgroundColor: 'rgba(0,0,0,0.95)', titleColor: '#00ff41', callbacks: { label: (ctx) => `R$ ${ctx.parsed.y.toLocaleString('pt-BR')}` } } }
+            chartW = new Chart(canvas.getContext('2d'), {
+                type: 'line',
+                data: { datasets: ds },
+                options: {
+                    responsive: true, maintainAspectRatio: false, animation: false,
+                    interaction: { mode: 'nearest', intersect: true, axis: 'xy' },
+                    scales: { 
+                        x: { type: 'time', grid: { display: false }, ticks: { color: '#555' } }, 
+                        y: { position: 'right', grid: { color: '#111' }, ticks: { color: '#888' } } 
+                    },
+                    plugins: { 
+                        legend: { display: false }, 
+                        tooltip: { 
+                            enabled: true, backgroundColor: 'rgba(0,0,0,0.95)', titleColor: '#00ff41', 
+                            callbacks: { label: (ctx) => `R$ ${ctx.parsed.y.toLocaleString('pt-BR')}` } 
+                        } 
                     }
-                });
-
-                let state = { drag: false, lx: 0, ly: 0 };
-                const move = (ex, ey) => {
-                    if(!state.drag) return;
-                    const s = charts[k].scales;
-                    const dx = ((ex - state.lx) / s.x.width) * (s.x.max - s.x.min);
-                    const dy = ((ey - state.ly) / s.y.height) * (s.y.max - s.y.min);
-                    charts[k].options.scales.x.min = (charts[k].options.scales.x.min || s.x.min) - dx;
-                    charts[k].options.scales.x.max = (charts[k].options.scales.x.max || s.x.max) - dx;
-                    charts[k].options.scales.y.min = (charts[k].options.scales.y.min || s.y.min) + dy;
-                    charts[k].options.scales.y.max = (charts[k].options.scales.y.max || s.y.max) + dy;
-                    state.lx = ex; state.ly = ey;
-                    charts[k].update('none');
-                };
-                canvas.addEventListener('mousedown', e => { state.drag = true; state.lx = e.clientX; state.ly = e.clientY; });
-                window.addEventListener('mouseup', () => state.drag = false);
-                canvas.addEventListener('mousemove', e => move(e.clientX, e.clientY));
-                canvas.addEventListener('wheel', e => {
-                    e.preventDefault();
-                    const s = charts[k].scales, f = e.deltaY > 0 ? 1.1 : 0.9;
-                    const xr = (s.x.max - s.x.min) * f, yr = (s.y.max - s.y.min) * f;
-                    const xm = (s.x.max + s.x.min)/2, ym = (s.y.max + s.y.min)/2;
-                    charts[k].options.scales.x.min = xm - xr/2; charts[k].options.scales.x.max = xm + xr/2;
-                    charts[k].options.scales.y.min = ym - yr/2; charts[k].options.scales.y.max = ym + yr/2;
-                    charts[k].update('none');
-                }, {passive: false});
+                }
             });
+
+            let state = { drag: false, lx: 0, ly: 0 };
+            const move = (ex, ey) => {
+                if(!state.drag) return;
+                const s = chartW.scales;
+                const dx = ((ex - state.lx) / s.x.width) * (s.x.max - s.x.min);
+                const dy = ((ey - state.ly) / s.y.height) * (s.y.max - s.y.min);
+                chartW.options.scales.x.min = (chartW.options.scales.x.min || s.x.min) - dx;
+                chartW.options.scales.x.max = (chartW.options.scales.x.max || s.x.max) - dx;
+                chartW.options.scales.y.min = (chartW.options.scales.y.min || s.y.min) + dy;
+                chartW.options.scales.y.max = (chartW.options.scales.y.max || s.y.max) + dy;
+                state.lx = ex; state.ly = ey;
+                chartW.update('none');
+            };
+            canvas.addEventListener('mousedown', e => { state.drag = true; state.lx = e.clientX; state.ly = e.clientY; });
+            window.addEventListener('mouseup', () => state.drag = false);
+            canvas.addEventListener('mousemove', e => move(e.clientX, e.clientY));
+            canvas.addEventListener('wheel', e => {
+                e.preventDefault();
+                const s = chartW.scales, f = e.deltaY > 0 ? 1.1 : 0.9;
+                const xr = (s.x.max - s.x.min) * f, yr = (s.y.max - s.y.min) * f;
+                const xm = (s.x.max + s.x.min)/2, ym = (s.y.max + s.y.min)/2;
+                chartW.options.scales.x.min = xm - xr/2; chartW.options.scales.x.max = xm + xr/2;
+                chartW.options.scales.y.min = ym - yr/2; chartW.options.scales.y.max = ym + yr/2;
+                chartW.update('none');
+            }, {passive: false});
         }
-        window.onload = () => { initCharts(); startSystem(); };
+
+        window.onload = () => { initChart(); startSystem(); };
     </script>
 </body>
 </html>
