@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>SKYNET V51 - AUTO-CAPTURE SNAPSHOT W1</title>
+    <title>SKYNET V51 - AUTO-CAPTURE SNAPSHOT W1 (FIXED RETRO)</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
     <style>
@@ -50,7 +50,7 @@
 
     <div class="main-container">
         <div class="chart-container">
-            <div class="time-label">W1 - VISÃO SEMANAL (AUTO-CAPTURE)</div>
+            <div class="time-label">W1 - VISÃO SEMANAL (NAVEGAÇÃO RETROATIVA CORRIGIDA)</div>
             <button class="reset-btn" onclick="resetScale()">RESET ESCALA</button>
             <div class="hud-tag">
                 <div id="targetW" class="val-atual">ATUAL: ---</div>
@@ -78,7 +78,9 @@
         }
 
         function stepTime(delta) {
-            timeShift = Math.max(0, timeShift + delta);
+            // Garante que o timeShift não ultrapasse o limite de histórico navegável
+            const maxShift = Math.max(0, histW.length - 90);
+            timeShift = Math.min(maxShift, Math.max(0, timeShift + delta));
             refreshEngine();
         }
 
@@ -96,23 +98,28 @@
             if(ws) ws.close();
             const symbol = document.getElementById('symbol').value.toUpperCase();
             singleSnapshotW = null;
+            timeShift = 0;
+            document.getElementById('snapW').innerText = "SNAP: CARREGANDO... ";
             
-            const r = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1w&limit=600`);
-            histW = (await r.json()).map(d => ({ x: d[0], c: parseFloat(d[4]) }));
-            
-            // Pré-scan para encontrar o último snapshot ocorrido no passado
-            autoScanLastSnapshot();
-
-            connectStream(symbol); 
-            refreshEngine();
+            try {
+                const r = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1w&limit=1000`);
+                const data = await r.json();
+                histW = data.map(d => ({ x: d[0], c: parseFloat(d[4]) }));
+                
+                autoScanLastSnapshot();
+                connectStream(symbol); 
+                refreshEngine();
+            } catch(e) {
+                console.error("Erro ao carregar dados:", e);
+                document.getElementById('snapW').innerText = "ERRO AO CARREGAR PAR";
+            }
         }
 
-        // Função que varre o histórico para capturar o último snapshot de destonação automaticamente
         function autoScanLastSnapshot() {
-            if(histW.length < 200) return;
+            if(histW.length < 90) return;
             
-            // Varre do candle recente para o passado (últimas 60 semanas)
-            for (let shift = 0; shift < 60; shift++) {
+            const maxShift = Math.min(200, histW.length - 90);
+            for (let shift = 0; shift < maxShift; shift++) {
                 const subHist = histW.slice(0, histW.length - shift);
                 const proj = getProjData(subHist, [1, 2, 3, 4]);
                 
@@ -121,7 +128,7 @@
                         time: subHist[subHist.length - 1].x,
                         data: [{ x: subHist[subHist.length-1].x, y: subHist[subHist.length-1].c }, ...proj.main.points]
                     };
-                    break; // Encontrou o mais recente, encerra a busca
+                    break;
                 }
             }
         }
@@ -131,7 +138,8 @@
             ws.onmessage = (e) => {
                 const p = parseFloat(JSON.parse(e.data).k.c);
                 if (timeShift === 0) {
-                    document.getElementById('mainPrice').innerText = `R$ ${p.toLocaleString('pt-BR')}`;
+                    const prefix = symbol.includes('USD') ? '$' : 'R$';
+                    document.getElementById('mainPrice').innerText = `${prefix} ${p.toLocaleString('pt-BR')}`;
                 }
                 if(histW.length) histW[histW.length-1].c = p;
                 if (timeShift === 0) refreshEngine();
@@ -155,22 +163,39 @@
             return (countAbove > points.length / 2) ? Math.max(...values) : Math.min(...values);
         }
 
-        // Função isolada de projeção para permitir o auto-scan
+        // Função de projeção ajustada para suportar navegação retroativa profunda
         function getProjData(hist, offsets) {
-            if(hist.length < 200) return null;
+            // Reduzido para 90 semanas de mínimo necessário
+            if(!hist || hist.length < 90) return null; 
+            
             const pLen = 40, fLen = 40;
             const step = hist[1].x - hist[0].x;
 
             const calcProj = (offset) => {
                 const idx = hist.length - 1 - offset;
+                // Verificação de segurança de limites de array
+                if (idx - pLen < 0) return null;
+
                 const cur = normalize(hist.slice(idx - pLen, idx));
                 let bScore = Infinity, bIdx = -1;
-                for(let i=0; i < idx - pLen - fLen - 5; i++) {
-                    const s = calcE(cur, normalize(hist.slice(i, i + pLen)));
+                
+                // Garante que o loop nunca tente acessar posições negativas
+                const maxSearchIndex = idx - pLen - fLen - 1;
+                if (maxSearchIndex <= 0) return null;
+
+                for(let i = 0; i < maxSearchIndex; i++) {
+                    const sample = hist.slice(i, i + pLen);
+                    if(sample.length < pLen) continue;
+                    
+                    const s = calcE(cur, normalize(sample));
                     if(s < bScore) { bScore = s; bIdx = i; }
                 }
+                
                 if(bIdx === -1) return null;
+                
                 const fut = hist.slice(bIdx + pLen, bIdx + pLen + fLen);
+                if (fut.length === 0) return null;
+
                 let lV = hist[idx].c, lT = hist[idx].x, bR = hist[bIdx + pLen - 1].c;
                 return { points: fut.map((d, k) => ({ x: lT + ((k+1) * step), y: lV * (d.c / bR) })), baseline: lV };
             };
@@ -197,13 +222,21 @@
         function runEngine(histFull, chart, tid, sid, cid, snapid, offsets) {
             const hist = timeShift > 0 ? histFull.slice(0, histFull.length - timeShift) : histFull;
             const res = getProjData(hist, offsets);
-            if(!res) return;
+            
+            if(!res) {
+                document.getElementById(tid).innerText = `ATUAL: SEM DADOS SUFICIENTES`;
+                document.getElementById(cid).innerText = `CONV: ---`;
+                document.getElementById(sid).innerText = `DIF: ---`;
+                chart.update('none');
+                return;
+            }
 
             const { main, traces, isOppositeDirection, amplitudeDiff, mainExtreme } = res;
+            const symbol = document.getElementById('symbol').value.toUpperCase();
+            const prefix = symbol.includes('USD') ? '$' : 'R$';
 
-            document.getElementById(tid).innerText = `ATUAL: R$ ${mainExtreme.toLocaleString('pt-BR', {maximumFractionDigits:0})}`;
+            document.getElementById(tid).innerText = `ATUAL: ${prefix} ${mainExtreme.toLocaleString('pt-BR', {maximumFractionDigits:0})}`;
 
-            // Se um novo giro de destonação ocorrer no candle atual da navegação/ao vivo, atualiza o snapshot
             if (isOppositeDirection && amplitudeDiff > 0.18) {
                 singleSnapshotW = {
                     time: hist[hist.length - 1].x,
@@ -231,14 +264,14 @@
             if(bestIdx !== -1) {
                 const convExtreme = calculateExtremeTarget(traces[bestIdx].points, traces[bestIdx].baseline);
                 const convEl = document.getElementById(cid);
-                convEl.innerText = `CONV: R$ ${convExtreme.toLocaleString('pt-BR', {maximumFractionDigits:0})}`;
+                convEl.innerText = `CONV: ${prefix} ${convExtreme.toLocaleString('pt-BR', {maximumFractionDigits:0})}`;
                 convEl.style.color = colors[bestIdx]; 
                 
                 const dDisplay = ((mainExtreme - convExtreme) / mainExtreme * 100).toFixed(2);
                 document.getElementById(sid).innerText = `DIF: ${dDisplay}%`;
             }
 
-            chart.data.datasets[0].data = hist.slice(-120).map(d => ({x: d.x, y: d.c}));
+            chart.data.datasets[0].data = hist.slice(-250).map(d => ({x: d.x, y: d.c}));
             chart.data.datasets[1].data = [{x: hist[hist.length-1].x, y: hist[hist.length-1].c}, ...main.points];
             
             for(let i=0; i<4; i++) {
@@ -260,8 +293,17 @@
             chart.update('none');
         }
 
-        function normalize(d) { const s = d[0].c; return d.map(v => (v.c - s)/s); }
-        function calcE(a, b) { let s = 0; for(let i=0; i<a.length; i++) s += (a[i]-b[i])**2; return s; }
+        function normalize(d) { 
+            if (!d || d.length === 0) return [];
+            const s = d[0].c; 
+            return d.map(v => (v.c - s)/s); 
+        }
+        
+        function calcE(a, b) { 
+            let s = 0; 
+            for(let i=0; i<a.length; i++) s += (a[i]-b[i])**2; 
+            return s; 
+        }
 
         function initChart() {
             const canvas = document.getElementById('chartW');
@@ -288,7 +330,13 @@
                         legend: { display: false }, 
                         tooltip: { 
                             enabled: true, backgroundColor: 'rgba(0,0,0,0.95)', titleColor: '#00ff41', 
-                            callbacks: { label: (ctx) => `R$ ${ctx.parsed.y.toLocaleString('pt-BR')}` } 
+                            callbacks: { 
+                                label: (ctx) => {
+                                    const symbol = document.getElementById('symbol').value.toUpperCase();
+                                    const prefix = symbol.includes('USD') ? '$' : 'R$';
+                                    return `${prefix} ${ctx.parsed.y.toLocaleString('pt-BR')}`;
+                                }
+                            } 
                         } 
                     }
                 }
