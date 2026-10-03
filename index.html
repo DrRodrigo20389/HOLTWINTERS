@@ -2,73 +2,100 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>SKYNET V51 - AUTO-CAPTURE SNAPSHOT W1 (FIXED RETRO)</title>
+    <title>SKYNET V-DARWIN - COMPETITIVE NEURAL ENGINE</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
     <style>
-        body { background-color: #000; color: #fff; font-family: 'Verdana', sans-serif; margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; touch-action: none; }
-        .toolbar { background: #050505; border-bottom: 2px solid #333; padding: 5px 15px; display: flex; align-items: center; justify-content: space-between; height: 60px; flex-shrink: 0; }
-        .logo-sub { font-size: 0.65rem; color: #00ff41; font-weight: 900; }
-        .live-price { font-size: 1.2rem; font-weight: bold; font-family: monospace; color: #00ff41; }
-        .main-container { flex: 1; width: 100%; height: 100%; overflow: hidden; position: relative; }
-        .chart-container { width: 100%; height: 100%; position: relative; background: #000; overflow: hidden; cursor: crosshair; }
-        .time-label { position: absolute; top: 10px; left: 15px; font-size: 0.85rem; font-weight: 900; color: #00ff41; z-index: 11; }
-        .hud-tag { position: absolute; top: 35px; left: 15px; pointer-events: none; background: rgba(0,0,0,0.9); border-left: 3px solid #00ff41; padding: 8px 15px; border-radius: 4px; z-index: 10; border: 1px solid #333; min-width: 200px; }
-        .reset-btn { position: absolute; top: 10px; right: 15px; background: rgba(0, 255, 65, 0.1); border: 1px solid #00ff41; color: #00ff41; padding: 6px 14px; font-size: 0.75rem; cursor: pointer; z-index: 1000; border-radius: 3px; font-weight: bold; }
-        .val-atual { color: #00ff41; font-weight: 900; font-size: 1.1rem; }
-        .val-conv { font-weight: 900; font-size: 0.9rem; margin-top: 3px; transition: color 0.3s; }
-        .dif-text { font-size: 0.75rem; color: #888; }
-        .snap-status { font-size: 0.75rem; color: #00ffff; font-weight: bold; margin-top: 4px; }
+        body { background-color: #030303; color: #fff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; touch-action: none; }
+        .toolbar { background: #0a0a0a; border-bottom: 1px solid #222; padding: 8px 20px; display: flex; align-items: center; justify-content: space-between; height: 65px; flex-shrink: 0; box-shadow: 0 4px 20px rgba(0,0,0,0.5); z-index: 100; }
+        .logo-title { font-size: 1.4rem; font-weight: 900; letter-spacing: 1px; color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.2); margin-bottom: 2px; }
+        .logo-sub { font-size: 0.65rem; color: #00ff88; font-weight: 700; letter-spacing: 2px; }
+        .live-price { font-size: 1.3rem; font-weight: 900; font-family: 'Courier New', Courier, monospace; color: #00ff88; text-shadow: 0 0 15px rgba(0,255,136,0.4); padding: 5px 15px; background: rgba(0,255,136,0.05); border-radius: 4px; border: 1px solid rgba(0,255,136,0.2); }
+        .main-container { flex: 1; width: 100%; height: 100%; position: relative; background: radial-gradient(circle at 50% 50%, #111 0%, #000 100%); }
+        .chart-container { width: 100%; height: 100%; position: absolute; overflow: hidden; cursor: crosshair; }
+        .hud-panel { position: absolute; top: 20px; left: 20px; pointer-events: none; background: rgba(5,5,5,0.85); border-left: 4px solid #00ff88; padding: 15px 20px; border-radius: 0 6px 6px 0; z-index: 10; border-top: 1px solid #1a1a1a; border-right: 1px solid #1a1a1a; border-bottom: 1px solid #1a1a1a; min-width: 280px; backdrop-filter: blur(8px); box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
+        .time-label { font-size: 0.75rem; font-weight: 800; color: #888; letter-spacing: 1px; margin-bottom: 10px; border-bottom: 1px solid #222; padding-bottom: 5px; }
+        .val-atual { color: #fff; font-weight: 900; font-size: 1.2rem; }
+        .val-atual span { color: #00ff88; }
+        .val-conv { font-weight: 700; font-size: 0.95rem; margin-top: 8px; color: #aaa; }
+        .val-conv span { color: #00d4ff; }
+        .dif-text { font-size: 0.8rem; color: #666; margin-top: 2px; }
+        .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; padding-top: 15px; border-top: 1px solid #222; }
+        .metric-box { background: rgba(255,255,255,0.03); padding: 8px; border-radius: 4px; text-align: center; border: 1px solid rgba(255,255,255,0.05); }
+        .metric-title { font-size: 0.6rem; color: #888; font-weight: bold; margin-bottom: 4px; }
+        .metric-value { font-size: 0.9rem; font-weight: 900; color: #00ff88; }
         
-        .time-controls { display: flex; align-items: center; gap: 8px; background: #111; padding: 4px 12px; border-radius: 4px; border: 1px solid #333; }
-        .time-btn { background: #222; border: 1px solid #00ff41; color: #00ff41; padding: 5px 10px; font-size: 0.8rem; font-weight: bold; cursor: pointer; border-radius: 3px; }
-        .time-btn:hover { background: #00ff41; color: #000; }
-        .time-btn-reset { border-color: #ff3333; color: #ff3333; }
-        .time-btn-reset:hover { background: #ff3333; color: #fff; }
+        .controls { display: flex; gap: 10px; align-items: center; }
+        .btn-nav { background: #111; border: 1px solid #333; color: #ccc; padding: 8px 16px; font-size: 0.8rem; font-weight: bold; cursor: pointer; border-radius: 4px; transition: all 0.2s; }
+        .btn-nav:hover { background: #222; border-color: #00ff88; color: #00ff88; }
+        .btn-reset { border-color: rgba(255, 50, 50, 0.5); color: #ff4444; }
+        .btn-reset:hover { background: rgba(255, 50, 50, 0.1); border-color: #ff4444; color: #ff4444; }
+        .btn-export { background: rgba(0, 212, 255, 0.1); border-color: #00d4ff; color: #00d4ff; }
+        .btn-export:hover { background: rgba(0, 212, 255, 0.2); border-color: #fff; color: #fff; box-shadow: 0 0 10px rgba(0,212,255,0.5); }
+        .btn-scale { position: absolute; top: 20px; right: 20px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.2); color: #ccc; padding: 6px 14px; font-size: 0.75rem; cursor: pointer; z-index: 100; border-radius: 4px; font-weight: bold; transition: 0.3s; backdrop-filter: blur(4px); }
+        .btn-scale:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
+        
+        input[type="text"], input[type="number"] { background: #111; border: 1px solid #333; color: #fff; padding: 8px 12px; font-size: 0.9rem; font-weight: bold; border-radius: 4px; outline: none; transition: border 0.3s; text-align: center; }
+        input[type="text"]:focus, input[type="number"]:focus { border-color: #00ff88; }
     </style>
 </head>
 <body>
     <div class="toolbar">
-        <div style="line-height:1">
-            <div style="font-size:1.2rem; font-weight:900;">SKYNET</div>
-            <div class="logo-sub">W1 AUTO SNAPSHOT ENGINE</div>
+        <div>
+            <div class="logo-title">SKYNET V-DARWIN</div>
+            <div class="logo-sub">COMPETITIVE NEURAL & DATA MINING</div>
         </div>
         
-        <div class="inputs">
-            <input type="text" id="symbol" value="BTCBRL" style="background:#111; border:1px solid #444; color:#fff; padding:6px; width:85px; text-align:center; font-weight:bold;">
-            <button onclick="startSystem()" style="background:#00ff41; color:#000; border:none; padding:7px 14px; font-weight:900; cursor:pointer; border-radius:4px; margin-left:5px;">SCAN</button>
+        <div class="controls">
+            <input type="text" id="symbol" value="BTCBRL" style="width: 90px;">
+            <span style="font-size:0.7rem; color:#00ffff; font-weight:bold;">LIMIAR COESÃO (%):</span>
+            <input type="number" id="minFitLimit" value="70" step="1" min="1" max="100" style="width: 50px;" onchange="refreshEngine()">
+
+            <button class="btn-nav" onclick="startSystem()" style="background: rgba(0,255,136,0.1); border-color: #00ff88; color: #00ff88;">SINCRONIZAR</button>
+            <div style="width: 1px; background: #333; margin: 0 5px; height: 30px;"></div>
+            <button class="btn-nav" onclick="stepTime(1)">◀ -1 W</button>
+            <button class="btn-nav" onclick="stepTime(-1)">+1 W ▶</button>
+            <button class="btn-nav btn-reset" onclick="resetTime()">LIVE</button>
+            <div style="width: 1px; background: #333; margin: 0 5px; height: 30px;"></div>
+            <button class="btn-nav btn-export" id="btnExport" onclick="exportDataToCSV()">EXPORTAR MATRIZ (CSV)</button>
         </div>
 
-        <div class="time-controls">
-            <button class="time-btn" onclick="stepTime(1)">◀ -1 Semanal</button>
-            <button class="time-btn" onclick="stepTime(-1)">+1 Semanal ▶</button>
-            <button class="time-btn time-btn-reset" onclick="resetTime()">LIVE</button>
-        </div>
-
-        <div class="live-price" id="mainPrice">---.---</div>
+        <div class="live-price" id="mainPrice">A CARREGAR...</div>
     </div>
 
     <div class="main-container">
-        <div class="chart-container">
-            <div class="time-label">W1 - VISÃO SEMANAL (NAVEGAÇÃO RETROATIVA CORRIGIDA)</div>
-            <button class="reset-btn" onclick="resetScale()">RESET ESCALA</button>
-            <div class="hud-tag">
-                <div id="targetW" class="val-atual">ATUAL: ---</div>
-                <div id="convW" class="val-conv">CONV: ---</div>
-                <div id="diffW" class="dif-text">DIF: ---</div>
-                <div id="snapW" class="snap-status">SNAP: ESCANEANDO...</div>
+        <button class="btn-scale" onclick="resetScale()">CENTRAR GRÁFICO</button>
+        <div class="hud-panel">
+            <div class="time-label">VISÃO ESTRUTURAL W1 (COMPETIÇÃO ATIVA)</div>
+            <div id="targetW" class="val-atual">PREÇO: <span>---</span></div>
+            <div id="convW" class="val-conv">ALVO (VENCEDOR): <span>---</span></div>
+            <div id="difW" class="dif-text">DIFERENCIAL: ---</div>
+            
+            <div class="metrics-grid">
+                <div class="metric-box">
+                    <div class="metric-title">ROTA DOMINANTE</div>
+                    <div class="metric-value" id="winnerGhost">---</div>
+                </div>
+                <div class="metric-box">
+                    <div class="metric-title">COESÃO DA ROTA</div>
+                    <div class="metric-value" id="cohesionVal">---</div>
+                </div>
             </div>
-            <canvas id="chartW"></canvas>
+            <div id="anchorDate" style="font-size: 0.7rem; color: #888; text-align: center; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #333;">ANCORADO EM: ---</div>
         </div>
+        <div class="chart-container"><canvas id="chartW"></canvas></div>
     </div>
 
     <script>
         let chartW, histW = [];
         let ws;
         let timeShift = 0;
-        const colors = ['#00FFFF', '#FF00FF', '#FFFF00', '#FF8C00'];
+        let activeDarwinState = null;
 
-        let singleSnapshotW = null;
+        function getMinFitLimit() {
+            const val = parseFloat(document.getElementById('minFitLimit').value);
+            return isNaN(val) ? 70 : val;
+        }
 
         function resetScale() {
             if(!chartW) return;
@@ -78,7 +105,6 @@
         }
 
         function stepTime(delta) {
-            // Garante que o timeShift não ultrapasse o limite de histórico navegável
             const maxShift = Math.max(0, histW.length - 90);
             timeShift = Math.min(maxShift, Math.max(0, timeShift + delta));
             refreshEngine();
@@ -97,244 +123,339 @@
         async function startSystem() {
             if(ws) ws.close();
             const symbol = document.getElementById('symbol').value.toUpperCase();
-            singleSnapshotW = null;
             timeShift = 0;
-            document.getElementById('snapW').innerText = "SNAP: CARREGANDO... ";
             
             try {
                 const r = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1w&limit=1000`);
                 const data = await r.json();
-                histW = data.map(d => ({ x: d[0], c: parseFloat(d[4]) }));
-                
-                autoScanLastSnapshot();
+                histW = data.map(d => ({ 
+                    x: d[0], o: parseFloat(d[1]), h: parseFloat(d[2]), l: parseFloat(d[3]), c: parseFloat(d[4]) 
+                }));
                 connectStream(symbol); 
                 refreshEngine();
             } catch(e) {
-                console.error("Erro ao carregar dados:", e);
-                document.getElementById('snapW').innerText = "ERRO AO CARREGAR PAR";
-            }
-        }
-
-        function autoScanLastSnapshot() {
-            if(histW.length < 90) return;
-            
-            const maxShift = Math.min(200, histW.length - 90);
-            for (let shift = 0; shift < maxShift; shift++) {
-                const subHist = histW.slice(0, histW.length - shift);
-                const proj = getProjData(subHist, [1, 2, 3, 4]);
-                
-                if (proj && proj.isOppositeDirection && proj.amplitudeDiff > 0.18) {
-                    singleSnapshotW = {
-                        time: subHist[subHist.length - 1].x,
-                        data: [{ x: subHist[subHist.length-1].x, y: subHist[subHist.length-1].c }, ...proj.main.points]
-                    };
-                    break;
-                }
+                console.error("Erro:", e);
+                document.getElementById('mainPrice').innerText = "ERRO DE REDE";
             }
         }
 
         function connectStream(symbol) {
             ws = new WebSocket(`wss://stream.binance.com:9443/ws/${symbol.toLowerCase()}@kline_1m`);
             ws.onmessage = (e) => {
-                const p = parseFloat(JSON.parse(e.data).k.c);
+                const k = JSON.parse(e.data).k;
+                const p = parseFloat(k.c);
                 if (timeShift === 0) {
                     const prefix = symbol.includes('USD') ? '$' : 'R$';
                     document.getElementById('mainPrice').innerText = `${prefix} ${p.toLocaleString('pt-BR')}`;
                 }
-                if(histW.length) histW[histW.length-1].c = p;
+                if(histW.length) {
+                    histW[histW.length-1].c = p;
+                }
                 if (timeShift === 0) refreshEngine();
             };
         }
 
-        function refreshEngine() {
-            if (timeShift > 0) {
-                document.getElementById('mainPrice').innerText = `[VOLTANDO ${timeShift} SEMANAS]`;
-                document.getElementById('mainPrice').style.color = '#ff9900';
-            } else {
-                document.getElementById('mainPrice').style.color = '#00ff41';
-            }
-
-            runEngine(histW, chartW, 'targetW', 'diffW', 'convW', 'snapW', [1, 2, 3, 4]);
-        }
-
-        function calculateExtremeTarget(points, baseline) {
-            let countAbove = points.filter(p => p.y > baseline).length;
-            let values = points.map(p => p.y);
-            return (countAbove > points.length / 2) ? Math.max(...values) : Math.min(...values);
-        }
-
-        // Função de projeção ajustada para suportar navegação retroativa profunda
-        function getProjData(hist, offsets) {
-            // Reduzido para 90 semanas de mínimo necessário
-            if(!hist || hist.length < 90) return null; 
-            
-            const pLen = 40, fLen = 40;
-            const step = hist[1].x - hist[0].x;
-
-            const calcProj = (offset) => {
-                const idx = hist.length - 1 - offset;
-                // Verificação de segurança de limites de array
-                if (idx - pLen < 0) return null;
-
-                const cur = normalize(hist.slice(idx - pLen, idx));
-                let bScore = Infinity, bIdx = -1;
-                
-                // Garante que o loop nunca tente acessar posições negativas
-                const maxSearchIndex = idx - pLen - fLen - 1;
-                if (maxSearchIndex <= 0) return null;
-
-                for(let i = 0; i < maxSearchIndex; i++) {
-                    const sample = hist.slice(i, i + pLen);
-                    if(sample.length < pLen) continue;
-                    
-                    const s = calcE(cur, normalize(sample));
-                    if(s < bScore) { bScore = s; bIdx = i; }
-                }
-                
-                if(bIdx === -1) return null;
-                
-                const fut = hist.slice(bIdx + pLen, bIdx + pLen + fLen);
-                if (fut.length === 0) return null;
-
-                let lV = hist[idx].c, lT = hist[idx].x, bR = hist[bIdx + pLen - 1].c;
-                return { points: fut.map((d, k) => ({ x: lT + ((k+1) * step), y: lV * (d.c / bR) })), baseline: lV };
-            };
-
-            const main = calcProj(0);
-            if(!main) return null;
-            const traces = offsets.map(o => calcProj(o));
-
-            let mainSlope = (main.points[main.points.length - 1].y - main.baseline) / main.baseline;
-            let validTraces = traces.filter(t => t !== null);
-            let avgTraceSlope = 0;
-            if (validTraces.length > 0) {
-                let slopes = validTraces.map(t => (t.points[t.points.length - 1].y - t.baseline) / t.baseline);
-                avgTraceSlope = slopes.reduce((a, b) => a + b, 0) / slopes.length;
-            }
-
-            let mainExtreme = calculateExtremeTarget(main.points, main.baseline);
-            let isOppositeDirection = (mainSlope * avgTraceSlope < 0);
-            let amplitudeDiff = Math.abs(mainExtreme - (validTraces.length ? calculateExtremeTarget(validTraces[0].points, validTraces[0].baseline) : mainExtreme)) / mainExtreme;
-
-            return { main, traces, isOppositeDirection, amplitudeDiff, mainExtreme };
-        }
-
-        function runEngine(histFull, chart, tid, sid, cid, snapid, offsets) {
-            const hist = timeShift > 0 ? histFull.slice(0, histFull.length - timeShift) : histFull;
-            const res = getProjData(hist, offsets);
-            
-            if(!res) {
-                document.getElementById(tid).innerText = `ATUAL: SEM DADOS SUFICIENTES`;
-                document.getElementById(cid).innerText = `CONV: ---`;
-                document.getElementById(sid).innerText = `DIF: ---`;
-                chart.update('none');
-                return;
-            }
-
-            const { main, traces, isOppositeDirection, amplitudeDiff, mainExtreme } = res;
-            const symbol = document.getElementById('symbol').value.toUpperCase();
-            const prefix = symbol.includes('USD') ? '$' : 'R$';
-
-            document.getElementById(tid).innerText = `ATUAL: ${prefix} ${mainExtreme.toLocaleString('pt-BR', {maximumFractionDigits:0})}`;
-
-            if (isOppositeDirection && amplitudeDiff > 0.18) {
-                singleSnapshotW = {
-                    time: hist[hist.length - 1].x,
-                    data: [{ x: hist[hist.length-1].x, y: hist[hist.length-1].c }, ...main.points]
-                };
-            }
-
-            if (singleSnapshotW) {
-                const dateSnap = new Date(singleSnapshotW.time).toLocaleDateString('pt-BR');
-                document.getElementById(snapid).innerText = `LAST SNAP: ${dateSnap}`;
-                document.getElementById(snapid).style.color = '#00ffff';
-            } else {
-                document.getElementById(snapid).innerText = `SNAP: SEM GIRO RELEVANTE`;
-                document.getElementById(snapid).style.color = '#555555';
-            }
-
-            let minDiff = Infinity, bestIdx = -1;
-            traces.forEach((t, i) => {
-                if(!t) return;
-                const tExtreme = calculateExtremeTarget(t.points, t.baseline);
-                const diff = Math.abs((mainExtreme - tExtreme) / mainExtreme);
-                if(diff < minDiff) { minDiff = diff; bestIdx = i; }
-            });
-
-            if(bestIdx !== -1) {
-                const convExtreme = calculateExtremeTarget(traces[bestIdx].points, traces[bestIdx].baseline);
-                const convEl = document.getElementById(cid);
-                convEl.innerText = `CONV: ${prefix} ${convExtreme.toLocaleString('pt-BR', {maximumFractionDigits:0})}`;
-                convEl.style.color = colors[bestIdx]; 
-                
-                const dDisplay = ((mainExtreme - convExtreme) / mainExtreme * 100).toFixed(2);
-                document.getElementById(sid).innerText = `DIF: ${dDisplay}%`;
-            }
-
-            chart.data.datasets[0].data = hist.slice(-250).map(d => ({x: d.x, y: d.c}));
-            chart.data.datasets[1].data = [{x: hist[hist.length-1].x, y: hist[hist.length-1].c}, ...main.points];
-            
-            for(let i=0; i<4; i++) {
-                chart.data.datasets[i+2].data = traces[i] ? traces[i].points : [];
-            }
-
-            if (!chart.data.datasets[6]) {
-                chart.data.datasets.push({
-                    label: 'ActiveSnapshot',
-                    data: [],
-                    borderColor: '#FFFFFF',
-                    borderWidth: 2.5,
-                    borderDash: [6, 4],
-                    pointRadius: 0
-                });
-            }
-            chart.data.datasets[6].data = singleSnapshotW ? singleSnapshotW.data : [];
-
-            chart.update('none');
-        }
-
-        function normalize(d) { 
-            if (!d || d.length === 0) return [];
-            const s = d[0].c; 
-            return d.map(v => (v.c - s)/s); 
-        }
-        
-        function calcE(a, b) { 
+        function calcRobustError(curData, candData) { 
             let s = 0; 
-            for(let i=0; i<a.length; i++) s += (a[i]-b[i])**2; 
+            const curBase = curData[0].c;
+            const candBase = candData[0].c;
+            
+            for(let i=0; i < curData.length; i++) {
+                let curNorm = (curData[i].c - curBase) / curBase;
+                let candNorm = (candData[i].c - candBase) / candBase;
+                s += Math.abs(curNorm - candNorm);
+            }
             return s; 
         }
+
+        function findGhostsForIndex(hist, targetIdx, pLen = 40, fLen = 40) {
+            const step = hist[1].x - hist[0].x;
+            const curSlice = hist.slice(targetIdx - pLen, targetIdx);
+            const anchorPrice = hist[targetIdx].c;
+
+            let allMatches = [];
+            const maxSearchIndex = targetIdx - pLen - fLen - 1;
+
+            if (maxSearchIndex <= 0) return null;
+
+            for(let i = 0; i < maxSearchIndex; i++) {
+                const sample = hist.slice(i, i + pLen);
+                if(sample.length < pLen) continue;
+                let error = calcRobustError(curSlice, sample);
+                allMatches.push({ idx: i, error: error });
+            }
+
+            if (allMatches.length === 0) return null;
+            allMatches.sort((a, b) => a.error - b.error);
+
+            let topK = [];
+            for (let m of allMatches) {
+                let isOverlap = topK.some(t => Math.abs(t.idx - m.idx) < (pLen * 0.75));
+                if (!isOverlap) {
+                    topK.push(m);
+                    if (topK.length === 3) break; 
+                }
+            }
+
+            if (topK.length === 0) return null;
+
+            let ghosts = [];
+            topK.forEach((match, index) => {
+                const fut = hist.slice(match.idx + pLen, match.idx + pLen + fLen);
+                if (fut.length === 0) return;
+                const bR = hist[match.idx + pLen - 1].c; 
+                
+                let points = fut.map((d, k) => {
+                    let percentChange = (d.c - bR) / bR;
+                    return { x: hist[targetIdx].x + ((k+1) * step), y: anchorPrice * (1 + percentChange) };
+                });
+                ghosts.push({ id: `FANTASMA ${index+1}`, points: points });
+            });
+
+            if (ghosts.length === 0) return null;
+            return { anchorIdx: targetIdx, anchorTime: hist[targetIdx].x, ghosts: ghosts };
+        }
+
+        function evaluateDarwinEngine(histFull, evalEndIdx, returnFullLog = false) {
+            const minFit = getMinFitLimit();
+            let ensemble = null;
+            let logMatrix = [];
+
+            const pLen = 40, fLen = 40;
+            const startIndex = Math.max(pLen + 10, evalEndIdx - 300);
+
+            for (let i = startIndex; i <= evalEndIdx; i++) {
+                let resetNeeded = false;
+                
+                if (ensemble) {
+                    let elapsed = i - ensemble.anchorIdx;
+                    
+                    if (elapsed >= fLen) {
+                        resetNeeded = true;
+                    } else {
+                        const actualSlice = histFull.slice(ensemble.anchorIdx, i + 1);
+                        let bestCohesion = -1;
+                        let winnerIdx = -1;
+
+                        for (let g = 0; g < ensemble.ghosts.length; g++) {
+                            const ghostPoints = ensemble.ghosts[g].points;
+                            let mapeSum = 0;
+                            let countValid = 0;
+                            for(let k = 0; k < actualSlice.length; k++){
+                                if (ghostPoints[k] && ghostPoints[k].y) {
+                                    mapeSum += Math.abs(actualSlice[k].c - ghostPoints[k].y) / actualSlice[k].c;
+                                    countValid++;
+                                }
+                            }
+                            let meanErr = countValid > 0 ? (mapeSum / countValid) : 1.0;
+                            let cohesion = Math.max(0, 100 - (meanErr * 150));
+                            
+                            ensemble.ghosts[g].currentCohesion = cohesion;
+
+                            if (cohesion > bestCohesion) {
+                                bestCohesion = cohesion;
+                                winnerIdx = g;
+                            }
+                        }
+
+                        if (winnerIdx !== -1) {
+                            ensemble.winnerIndex = winnerIdx;
+                            ensemble.winnerCohesion = bestCohesion;
+                        }
+
+                        if (bestCohesion < minFit) {
+                            resetNeeded = true;
+                        }
+
+                        if(returnFullLog && winnerIdx !== -1) {
+                            const wPoints = ensemble.ghosts[winnerIdx].points;
+                            logMatrix.push({
+                                Data_Atual: new Date(histFull[i].x).toLocaleDateString('pt-BR'),
+                                Preco_Real: histFull[i].c.toFixed(2),
+                                Semanas_Desde_Ancora: elapsed,
+                                Vencedor_Atual: ensemble.ghosts[winnerIdx].id,
+                                Coesao_Vencedor: bestCohesion.toFixed(2) + "%",
+                                Preco_Previsto_G1: ensemble.ghosts[0] && ensemble.ghosts[0].points[elapsed-1] ? ensemble.ghosts[0].points[elapsed-1].y.toFixed(2) : "",
+                                Preco_Previsto_G2: ensemble.ghosts[1] && ensemble.ghosts[1].points[elapsed-1] ? ensemble.ghosts[1].points[elapsed-1].y.toFixed(2) : "",
+                                Preco_Previsto_G3: ensemble.ghosts[2] && ensemble.ghosts[2].points[elapsed-1] ? ensemble.ghosts[2].points[elapsed-1].y.toFixed(2) : "",
+                                Status: resetNeeded ? "ROMPIMENTO (RECALCULANDO)" : "FIXADO"
+                            });
+                        }
+                    }
+                }
+
+                if (!ensemble || resetNeeded) {
+                    ensemble = findGhostsForIndex(histFull, i, pLen, fLen);
+                    if(ensemble) {
+                        ensemble.winnerIndex = 0;
+                        ensemble.winnerCohesion = 100;
+                        ensemble.ghosts.forEach(g => g.currentCohesion = 100);
+                        
+                        if(returnFullLog) {
+                            logMatrix.push({
+                                Data_Atual: new Date(histFull[i].x).toLocaleDateString('pt-BR'),
+                                Preco_Real: histFull[i].c.toFixed(2),
+                                Semanas_Desde_Ancora: 0,
+                                Vencedor_Atual: "NOVA ÂNCORA",
+                                Coesao_Vencedor: "100%",
+                                Preco_Previsto_G1: "", Preco_Previsto_G2: "", Preco_Previsto_G3: "",
+                                Status: "INICIANDO NOVA BUSCA"
+                            });
+                        }
+                    }
+                }
+            }
+
+            return returnFullLog ? logMatrix : ensemble;
+        }
+
+        function exportDataToCSV() {
+            if (histW.length < 100) { alert("Dados insuficientes para gerar matriz."); return; }
+            
+            const btn = document.getElementById('btnExport');
+            btn.innerText = "A PROCESSAR CSV...";
+            btn.style.color = "#ff9900";
+
+            setTimeout(() => {
+                try {
+                    const logData = evaluateDarwinEngine(histW, histW.length - 1, true);
+                    
+                    if (!logData || logData.length === 0) {
+                        alert("Nenhum dado gerado para a matriz.");
+                        btn.innerText = "EXPORTAR MATRIZ (CSV)";
+                        btn.style.color = "#00d4ff";
+                        return;
+                    }
+
+                    let csvContent = "Data_Atual,Preco_Real,Semanas_Desde_Ancora,Vencedor_Atual,Coesao_Vencedor,Preco_Previsto_G1,Preco_Previsto_G2,Preco_Previsto_G3,Status\n";
+                    
+                    logData.forEach(row => {
+                        csvContent += `${row.Data_Atual},${row.Preco_Real},${row.Semanas_Desde_Ancora},${row.Vencedor_Atual},${row.Coesao_Vencedor},${row.Preco_Previsto_G1},${row.Preco_Previsto_G2},${row.Preco_Previsto_G3},${row.Status}\n`;
+                    });
+
+                    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement("a");
+                    link.setAttribute("href", url);
+                    link.setAttribute("download", `SKYNET_MATRIZ_DADOS_${document.getElementById('symbol').value}.csv`);
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+
+                    btn.innerText = "EXPORTAR MATRIZ (CSV)";
+                    btn.style.color = "#00d4ff";
+                } catch (err) {
+                    console.error(err);
+                    alert("Erro ao exportar CSV: " + err.message);
+                    btn.innerText = "EXPORTAR MATRIZ (CSV)";
+                    btn.style.color = "#00d4ff";
+                }
+            }, 50);
+        }
+
+        function refreshEngine() {
+            const evalEndIdx = timeShift > 0 ? (histW.length - 1) - timeShift : (histW.length - 1);
+            const prefix = document.getElementById('symbol').value.includes('USD') ? '$' : 'R$';
+
+            if (timeShift > 0) {
+                document.getElementById('mainPrice').innerText = `[ RECUO TEMPORAL: -${timeShift} SEMANAS ]`;
+                document.getElementById('mainPrice').style.color = '#ff9900';
+            } else {
+                document.getElementById('mainPrice').style.color = '#00ff88';
+            }
+
+            activeDarwinState = evaluateDarwinEngine(histW, evalEndIdx, false);
+
+            if(!activeDarwinState) {
+                chartW.update('none'); return;
+            }
+
+            const currentPrice = histW[evalEndIdx].c;
+            const winnerGhost = activeDarwinState.ghosts[activeDarwinState.winnerIndex];
+            const finalTarget = winnerGhost && winnerGhost.points.length > 0 ? winnerGhost.points[winnerGhost.points.length-1].y : currentPrice;
+            
+            document.getElementById('targetW').innerHTML = `PREÇO: <span>${prefix} ${currentPrice.toLocaleString('pt-BR', {maximumFractionDigits:0})}</span>`;
+            document.getElementById('convW').innerHTML = `ALVO (VENCEDOR): <span style="color:#00ff88;">${prefix} ${finalTarget.toLocaleString('pt-BR', {maximumFractionDigits:0})}</span>`;
+            
+            const diff = ((finalTarget - currentPrice) / currentPrice * 100).toFixed(2);
+            document.getElementById('difW').innerText = `DISTÂNCIA ALVO: ${diff > 0 ? '+' : ''}${diff}%`;
+
+            document.getElementById('winnerGhost').innerText = winnerGhost ? winnerGhost.id : '---';
+            
+            const cohesionEl = document.getElementById('cohesionVal');
+            cohesionEl.innerText = `${activeDarwinState.winnerCohesion.toFixed(1)}%`;
+            cohesionEl.style.color = activeDarwinState.winnerCohesion >= 80 ? '#00ff88' : (activeDarwinState.winnerCohesion >= 60 ? '#ffcc00' : '#ff4444');
+
+            document.getElementById('anchorDate').innerText = `SISTEMA ANCORADO DESDE: ${new Date(activeDarwinState.anchorTime).toLocaleDateString('pt-BR')}`;
+
+            const histToDraw = histW.slice(0, evalEndIdx + 1);
+            chartW.data.datasets[0].data = histToDraw.slice(-350).map(d => ({x: d.x, y: d.c}));
+            
+            for(let i=1; i<=3; i++) chartW.data.datasets[i].data = [];
+            chartW.data.datasets[4].data = [];
+
+            let datasetIdx = 1;
+            activeDarwinState.ghosts.forEach((ghost, idx) => {
+                let plotData = [{x: histFull[activeDarwinState.anchorIdx].x, y: histFull[activeDarwinState.anchorIdx].c}, ...ghost.points];
+                if (idx === activeDarwinState.winnerIndex) {
+                    chartW.data.datasets[4].data = plotData;
+                    chartW.data.datasets[4].label = `ROTA PRINCIPAL (${ghost.id})`;
+                } else {
+                    chartW.data.datasets[datasetIdx].data = plotData;
+                    chartW.data.datasets[datasetIdx].label = `Standby: ${ghost.id}`;
+                    datasetIdx++;
+                }
+            });
+
+            chartW.update('none');
+        }
+
+        let histFull = []; 
+        setInterval(() => { histFull = histW; }, 1000);
 
         function initChart() {
             const canvas = document.getElementById('chartW');
             const ds = [
-                { label: 'Real', data: [], borderColor: '#FFF', borderWidth: 1.5, pointRadius: 0, hitRadius: 20 },
-                { label: 'Atual Verde', data: [], borderColor: '#00FF41', borderWidth: 2.5, pointRadius: 0, hitRadius: 20 }
+                { label: 'Preço Real', data: [], borderColor: '#ffffff', borderWidth: 2, pointRadius: 0, hitRadius: 15, tension: 0, z: 10 }
             ];
             
-            for(let i=0; i<4; i++) {
-                ds.push({ label: `Rastro_${i}`, data: [], borderColor: colors[i], borderWidth: 0, hidden: true, pointRadius: 0 });
+            const ghostColors = ['rgba(0, 150, 255, 0.4)', 'rgba(100, 100, 255, 0.3)'];
+            for(let i=0; i<2; i++) {
+                ds.push({ label: `Standby`, data: [], borderColor: ghostColors[i], borderWidth: 1.5, borderDash: [5, 5], pointRadius: 0, hitRadius: 15, tension: 0, z: 1 });
             }
+            ds.push({ label: `Standby Extra`, data: [], borderColor: 'transparent', borderWidth: 0 });
+
+            ds.push({ 
+                label: 'ROTA PRINCIPAL', data: [], 
+                borderColor: '#00ff88', borderWidth: 3.5, pointRadius: 0, hitRadius: 20, tension: 0, 
+                backgroundColor: 'rgba(0, 255, 136, 0.05)', fill: false, z: 5 
+            });
 
             chartW = new Chart(canvas.getContext('2d'), {
                 type: 'line',
                 data: { datasets: ds },
                 options: {
                     responsive: true, maintainAspectRatio: false, animation: false,
-                    interaction: { mode: 'nearest', intersect: true, axis: 'xy' },
+                    interaction: { mode: 'nearest', intersect: true }, 
+                    layout: { padding: { right: 50 } },
                     scales: { 
-                        x: { type: 'time', grid: { display: false }, ticks: { color: '#555' } }, 
-                        y: { position: 'right', grid: { color: '#111' }, ticks: { color: '#888' } } 
+                        x: { type: 'time', grid: { display: true, color: 'rgba(255,255,255,0.03)' }, ticks: { color: '#666' } }, 
+                        y: { position: 'right', grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#aaa', font: {weight: 'bold'} } } 
                     },
                     plugins: { 
                         legend: { display: false }, 
                         tooltip: { 
-                            enabled: true, backgroundColor: 'rgba(0,0,0,0.95)', titleColor: '#00ff41', 
+                            enabled: true, mode: 'nearest', intersect: true,
+                            backgroundColor: 'rgba(0,0,0,0.95)', titleColor: '#00d4ff', bodyFont: {size: 14, weight: 'bold'}, padding: 12,
                             callbacks: { 
+                                title: (tooltipItems) => {
+                                    const rawTimestamp = tooltipItems[0].parsed.x;
+                                    const date = new Date(rawTimestamp);
+                                    return "Data Alvo: " + date.toLocaleDateString('pt-BR');
+                                },
                                 label: (ctx) => {
-                                    const symbol = document.getElementById('symbol').value.toUpperCase();
-                                    const prefix = symbol.includes('USD') ? '$' : 'R$';
-                                    return `${prefix} ${ctx.parsed.y.toLocaleString('pt-BR')}`;
+                                    const prefix = document.getElementById('symbol').value.includes('USD') ? '$' : 'R$';
+                                    return `${ctx.dataset.label}: ${prefix} ${ctx.parsed.y.toLocaleString('pt-BR', {maximumFractionDigits:0})}`;
                                 }
                             } 
                         } 
@@ -348,10 +469,8 @@
                 const s = chartW.scales;
                 const dx = ((ex - state.lx) / s.x.width) * (s.x.max - s.x.min);
                 const dy = ((ey - state.ly) / s.y.height) * (s.y.max - s.y.min);
-                chartW.options.scales.x.min = (chartW.options.scales.x.min || s.x.min) - dx;
-                chartW.options.scales.x.max = (chartW.options.scales.x.max || s.x.max) - dx;
-                chartW.options.scales.y.min = (chartW.options.scales.y.min || s.y.min) + dy;
-                chartW.options.scales.y.max = (chartW.options.scales.y.max || s.y.max) + dy;
+                chartW.options.scales.x.min = s.x.min - dx; chartW.options.scales.x.max = s.x.max - dx;
+                chartW.options.scales.y.min = s.y.min + dy; chartW.options.scales.y.max = s.y.max + dy;
                 state.lx = ex; state.ly = ey;
                 chartW.update('none');
             };
@@ -361,10 +480,10 @@
             canvas.addEventListener('wheel', e => {
                 e.preventDefault();
                 const s = chartW.scales, f = e.deltaY > 0 ? 1.1 : 0.9;
-                const xr = (s.x.max - s.x.min) * f, yr = (s.y.max - s.y.min) * f;
-                const xm = (s.x.max + s.x.min)/2, ym = (s.y.max + s.y.min)/2;
-                chartW.options.scales.x.min = xm - xr/2; chartW.options.scales.x.max = xm + xr/2;
-                chartW.options.scales.y.min = ym - yr/2; chartW.options.scales.y.max = ym + yr/2;
+                const xr = (s.x.max - s.x.min) * f, xm = (s.x.max + s.x.min) / 2;
+                chartW.options.scales.x.min = xm - xr / 2; chartW.options.scales.x.max = xm + xr / 2;
+                const yr = (s.y.max - s.y.min) * f, ym = (s.y.max + s.y.min) / 2;
+                chartW.options.scales.y.min = ym - yr / 2; chartW.options.scales.y.max = ym + yr / 2;
                 chartW.update('none');
             }, {passive: false});
         }
