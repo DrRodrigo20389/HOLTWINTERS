@@ -49,7 +49,7 @@
         <div class="controls">
             <input type="text" id="symbol" value="BTCBRL" style="width: 90px;">
             <span style="font-size:0.7rem; color:#00ffff; font-weight:bold;">LIMIAR COESÃO (%):</span>
-            <input type="number" id="minFitLimit" value="70" step="1" min="1" max="100" style="width: 50px;" onchange="refreshEngine()">
+            <input type="number" id="minFitLimit" value="66" step="1" min="1" max="100" style="width: 50px;" onchange="refreshEngine()">
 
             <button class="btn-nav" onclick="startSystem()" style="background: rgba(0,255,136,0.1); border-color: #00ff88; color: #00ff88;">SINCRONIZAR</button>
             <div style="width: 1px; background: #333; margin: 0 5px; height: 30px;"></div>
@@ -94,7 +94,7 @@
 
         function getMinFitLimit() {
             const val = parseFloat(document.getElementById('minFitLimit').value);
-            return isNaN(val) ? 70 : val;
+            return isNaN(val) ? 66 : val;
         }
 
         function resetScale() {
