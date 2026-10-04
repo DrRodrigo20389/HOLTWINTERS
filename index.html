@@ -6,58 +6,194 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
     <style>
-        body { background-color: #030303; color: #fff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; touch-action: none; }
-        .toolbar { background: #0a0a0a; border-bottom: 1px solid #222; padding: 8px 20px; display: flex; align-items: center; justify-content: space-between; height: 65px; flex-shrink: 0; box-shadow: 0 4px 20px rgba(0,0,0,0.5); z-index: 100; }
-        .logo-title { font-size: 1.4rem; font-weight: 900; letter-spacing: 1px; color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.2); margin-bottom: 2px; }
-        .logo-sub { font-size: 0.65rem; color: #00ff88; font-weight: 700; letter-spacing: 2px; }
-        .live-price { font-size: 1.3rem; font-weight: 900; font-family: 'Courier New', Courier, monospace; color: #00ff88; text-shadow: 0 0 15px rgba(0,255,136,0.4); padding: 5px 15px; background: rgba(0,255,136,0.05); border-radius: 4px; border: 1px solid rgba(0,255,136,0.2); }
-        .main-container { flex: 1; width: 100%; height: 100%; position: relative; background: radial-gradient(circle at 50% 50%, #111 0%, #000 100%); }
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');
+
+        body { 
+            background-color: #03070d; 
+            color: #e0e6ed; 
+            font-family: 'Share Tech Mono', monospace; 
+            margin: 0; 
+            height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden; 
+            touch-action: none; 
+        }
+
+        .scanlines {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+            background-size: 100% 4px;
+            z-index: 90;
+            opacity: 0.7;
+        }
+
+        .toolbar { 
+            background: rgba(6, 11, 19, 0.95); 
+            border-bottom: 1px solid rgba(0, 255, 136, 0.2); 
+            padding: 6px 15px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            gap: 10px;
+            min-height: 55px; 
+            flex-shrink: 0; 
+            box-shadow: 0 4px 25px rgba(0,255,136,0.08); 
+            z-index: 100; 
+            backdrop-filter: blur(10px);
+        }
+
+        .logo-title { 
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1rem; 
+            font-weight: 900; 
+            letter-spacing: 1px; 
+            color: #fff; 
+            text-shadow: 0 0 10px rgba(0,255,136,0.5); 
+            white-space: nowrap;
+        }
+
+        .logo-sub { 
+            font-size: 0.55rem; 
+            color: #00ff88; 
+            font-weight: 700; 
+            letter-spacing: 2px; 
+            text-shadow: 0 0 5px rgba(0,255,136,0.3);
+            white-space: nowrap;
+        }
+
+        .live-price { 
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.95rem; 
+            font-weight: 900; 
+            color: #00ff88; 
+            text-shadow: 0 0 12px rgba(0,255,136,0.6); 
+            padding: 5px 12px; 
+            background: rgba(0,255,136,0.04); 
+            border-radius: 2px; 
+            border: 1px solid rgba(0,255,136,0.3); 
+            box-shadow: inset 0 0 10px rgba(0,255,136,0.1);
+            animation: pulseGlow 2.5s infinite alternate;
+            text-align: center;
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+
+        @keyframes pulseGlow {
+            from { box-shadow: inset 0 0 5px rgba(0,255,136,0.1), 0 0 5px rgba(0,255,136,0.2); }
+            to { box-shadow: inset 0 0 12px rgba(0,255,136,0.2), 0 0 18px rgba(0,255,136,0.4); }
+        }
+
+        .main-container { 
+            flex: 1; width: 100%; height: 100%; position: relative; 
+            background: radial-gradient(circle at 50% 50%, #08101a 0%, #020408 100%); 
+        }
+
         .chart-container { width: 100%; height: 100%; position: absolute; overflow: hidden; cursor: crosshair; }
-        .hud-panel { position: absolute; top: 20px; left: 20px; pointer-events: none; background: rgba(5,5,5,0.85); border-left: 4px solid #00ff88; padding: 15px 20px; border-radius: 0 6px 6px 0; z-index: 10; border-top: 1px solid #1a1a1a; border-right: 1px solid #1a1a1a; border-bottom: 1px solid #1a1a1a; min-width: 280px; backdrop-filter: blur(8px); box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
-        .time-label { font-size: 0.75rem; font-weight: 800; color: #888; letter-spacing: 1px; margin-bottom: 10px; border-bottom: 1px solid #222; padding-bottom: 5px; }
-        .val-atual { color: #fff; font-weight: 900; font-size: 1.2rem; }
-        .val-atual span { color: #00ff88; }
-        .val-conv { font-weight: 700; font-size: 0.95rem; margin-top: 8px; color: #aaa; }
-        .val-conv span { color: #00d4ff; }
-        .dif-text { font-size: 0.8rem; color: #666; margin-top: 2px; }
-        .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; padding-top: 15px; border-top: 1px solid #222; }
-        .metric-box { background: rgba(255,255,255,0.03); padding: 8px; border-radius: 4px; text-align: center; border: 1px solid rgba(255,255,255,0.05); }
-        .metric-title { font-size: 0.6rem; color: #888; font-weight: bold; margin-bottom: 4px; }
-        .metric-value { font-size: 0.9rem; font-weight: 900; color: #00ff88; }
+
+        .hud-panel { 
+            position: absolute; top: 15px; left: 15px; pointer-events: none; 
+            background: rgba(6, 12, 20, 0.82); 
+            border-left: 3px solid #00ff88; 
+            padding: 14px 18px; 
+            border-radius: 4px; 
+            z-index: 10; 
+            border-top: 1px solid rgba(0, 255, 136, 0.15); 
+            border-right: 1px solid rgba(0, 255, 136, 0.15); 
+            border-bottom: 1px solid rgba(0, 255, 136, 0.15); 
+            min-width: 270px; 
+            backdrop-filter: blur(12px); 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.8), 0 0 20px rgba(0,255,136,0.05); 
+        }
+
+        .time-label { 
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.6rem; font-weight: 700; color: #00d4ff; letter-spacing: 1px; 
+            margin-bottom: 10px; border-bottom: 1px solid rgba(0,212,255,0.2); padding-bottom: 4px; 
+        }
+
+        .val-atual { color: #fff; font-weight: 700; font-size: 1.05rem; }
+        .val-atual span { color: #00ff88; text-shadow: 0 0 8px rgba(0,255,136,0.4); }
+        .val-conv { font-weight: 700; font-size: 0.9rem; margin-top: 6px; color: #aaa; }
+        .val-conv span { color: #00ff88; text-shadow: 0 0 8px rgba(0,255,136,0.4); }
+        .dif-text { font-size: 0.75rem; color: #788b9e; margin-top: 2px; }
+
+        .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.08); }
+        .metric-box { 
+            background: rgba(0, 255, 136, 0.02); 
+            padding: 8px; border-radius: 3px; text-align: center; 
+            border: 1px solid rgba(0, 255, 136, 0.12); 
+        }
+        .metric-title { font-size: 0.55rem; color: #647a8e; font-weight: bold; letter-spacing: 1px; margin-bottom: 3px; }
+        .metric-value { font-family: 'Orbitron', sans-serif; font-size: 0.85rem; font-weight: 700; color: #00ff88; }
         
-        .controls { display: flex; gap: 10px; align-items: center; }
-        .btn-nav { background: #111; border: 1px solid #333; color: #ccc; padding: 8px 16px; font-size: 0.8rem; font-weight: bold; cursor: pointer; border-radius: 4px; transition: all 0.2s; }
-        .btn-nav:hover { background: #222; border-color: #00ff88; color: #00ff88; }
-        .btn-reset { border-color: rgba(255, 50, 50, 0.5); color: #ff4444; }
-        .btn-reset:hover { background: rgba(255, 50, 50, 0.1); border-color: #ff4444; color: #ff4444; }
-        .btn-export { background: rgba(0, 212, 255, 0.1); border-color: #00d4ff; color: #00d4ff; }
-        .btn-export:hover { background: rgba(0, 212, 255, 0.2); border-color: #fff; color: #fff; box-shadow: 0 0 10px rgba(0,212,255,0.5); }
-        .btn-scale { position: absolute; top: 20px; right: 20px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.2); color: #ccc; padding: 6px 14px; font-size: 0.75rem; cursor: pointer; z-index: 100; border-radius: 4px; font-weight: bold; transition: 0.3s; backdrop-filter: blur(4px); }
-        .btn-scale:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
+        .cohesion-bar { width: 100%; height: 3px; background: rgba(255,255,255,0.1); margin-top: 5px; border-radius: 2px; overflow: hidden; }
+        .cohesion-fill { height: 100%; width: 0%; background: #00ff88; box-shadow: 0 0 6px #00ff88; transition: width 0.4s ease; }
+
+        .controls { display: flex; gap: 6px; align-items: center; flex-shrink: 1; flex-wrap: nowrap; }
+        .btn-nav { 
+            background: rgba(12, 22, 34, 0.8); 
+            border: 1px solid rgba(0, 212, 255, 0.3); 
+            color: #00d4ff; 
+            padding: 5px 10px; 
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.75rem; font-weight: bold; cursor: pointer; 
+            border-radius: 2px; transition: all 0.2s; 
+            clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px);
+            white-space: nowrap;
+        }
+        .btn-nav:hover { 
+            background: rgba(0, 212, 255, 0.15); 
+            border-color: #00d4ff; color: #fff; 
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.4);
+        }
+        .btn-reset { border-color: rgba(255, 50, 50, 0.4); color: #ff5555; }
+        .btn-reset:hover { background: rgba(255, 50, 50, 0.15); border-color: #ff5555; color: #fff; box-shadow: 0 0 10px rgba(255, 85, 85, 0.4); }
+        .btn-export { background: rgba(0, 255, 136, 0.05); border-color: rgba(0, 255, 136, 0.4); color: #00ff88; }
+        .btn-export:hover { background: rgba(0, 255, 136, 0.2); border-color: #00ff88; color: #fff; box-shadow: 0 0 10px rgba(0,255,136,0.5); }
         
-        input[type="text"], input[type="number"] { background: #111; border: 1px solid #333; color: #fff; padding: 8px 12px; font-size: 0.9rem; font-weight: bold; border-radius: 4px; outline: none; transition: border 0.3s; text-align: center; }
-        input[type="text"]:focus, input[type="number"]:focus { border-color: #00ff88; }
+        .btn-scale { 
+            position: absolute; top: 15px; right: 15px; 
+            background: rgba(10, 20, 30, 0.8); 
+            border: 1px solid rgba(0, 212, 255, 0.3); 
+            color: #00d4ff; padding: 5px 12px; font-size: 0.7rem; 
+            cursor: pointer; z-index: 100; border-radius: 2px; font-weight: bold; 
+            transition: 0.3s; backdrop-filter: blur(6px); 
+        }
+        .btn-scale:hover { background: rgba(0, 212, 255, 0.2); color: #fff; box-shadow: 0 0 10px rgba(0,212,255,0.4); }
+        
+        input[type="text"], input[type="number"] { 
+            background: rgba(5, 12, 20, 0.9); 
+            border: 1px solid rgba(0, 212, 255, 0.3); 
+            color: #00ff88; padding: 4px 6px; font-size: 0.8rem; 
+            font-family: 'Share Tech Mono', monospace; font-weight: bold; 
+            border-radius: 2px; outline: none; transition: all 0.3s; text-align: center; 
+        }
+        input[type="text"]:focus, input[type="number"]:focus { border-color: #00ff88; box-shadow: 0 0 8px rgba(0,255,136,0.4); }
     </style>
 </head>
 <body>
+    <div class="scanlines"></div>
     <div class="toolbar">
         <div>
             <div class="logo-title">SKYNET V-DARWIN</div>
-            <div class="logo-sub">COMPETITIVE NEURAL & DATA MINING</div>
+            <div class="logo-sub">NEURAL DATA MINING</div>
         </div>
         
         <div class="controls">
-            <input type="text" id="symbol" value="BTCBRL" style="width: 90px;">
-            <span style="font-size:0.7rem; color:#00ffff; font-weight:bold;">LIMIAR COESÃO (%):</span>
-            <input type="number" id="minFitLimit" value="66" step="1" min="1" max="100" style="width: 50px;" onchange="refreshEngine()">
+            <input type="text" id="symbol" value="BTCBRL" style="width: 75px;">
+            <span style="font-size:0.65rem; color:#00d4ff; font-weight:bold; letter-spacing:1px; white-space:nowrap;">LIMIAR (%):</span>
+            <input type="number" id="minFitLimit" value="66" step="1" min="1" max="100" style="width: 40px;" onchange="refreshEngine()">
 
-            <button class="btn-nav" onclick="startSystem()" style="background: rgba(0,255,136,0.1); border-color: #00ff88; color: #00ff88;">SINCRONIZAR</button>
-            <div style="width: 1px; background: #333; margin: 0 5px; height: 30px;"></div>
-            <button class="btn-nav" onclick="stepTime(1)">◀ -1 W</button>
-            <button class="btn-nav" onclick="stepTime(-1)">+1 W ▶</button>
+            <button class="btn-nav" onclick="startSystem()" style="border-color: #00ff88; color: #00ff88;">SYNC</button>
+            <div style="width: 1px; background: rgba(255,255,255,0.1); margin: 0 2px; height: 22px;"></div>
+            <button class="btn-nav" onclick="stepTime(1)">◀ -1 SEM</button>
+            <button class="btn-nav" onclick="stepTime(-1)">+1 SEM ▶</button>
             <button class="btn-nav btn-reset" onclick="resetTime()">LIVE</button>
-            <div style="width: 1px; background: #333; margin: 0 5px; height: 30px;"></div>
-            <button class="btn-nav btn-export" id="btnExport" onclick="exportDataToCSV()">EXPORTAR MATRIZ (CSV)</button>
+            <div style="width: 1px; background: rgba(255,255,255,0.1); margin: 0 2px; height: 22px;"></div>
+            <button class="btn-nav btn-export" id="btnExport" onclick="exportDataToCSV()">EXPORTAR MATRIZ</button>
         </div>
 
         <div class="live-price" id="mainPrice">A CARREGAR...</div>
@@ -66,7 +202,7 @@
     <div class="main-container">
         <button class="btn-scale" onclick="resetScale()">CENTRAR GRÁFICO</button>
         <div class="hud-panel">
-            <div class="time-label">VISÃO ESTRUTURAL W1 (COMPETIÇÃO ATIVA)</div>
+            <div class="time-label">VISÃO ESTRUTURAL SEMANAL (COMPETIÇÃO ATIVA)</div>
             <div id="targetW" class="val-atual">PREÇO: <span>---</span></div>
             <div id="convW" class="val-conv">ALVO (VENCEDOR): <span>---</span></div>
             <div id="difW" class="dif-text">DIFERENCIAL: ---</div>
@@ -79,9 +215,10 @@
                 <div class="metric-box">
                     <div class="metric-title">COESÃO DA ROTA</div>
                     <div class="metric-value" id="cohesionVal">---</div>
+                    <div class="cohesion-bar"><div id="cohesionFill" class="cohesion-fill"></div></div>
                 </div>
             </div>
-            <div id="anchorDate" style="font-size: 0.7rem; color: #888; text-align: center; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #333;">ANCORADO EM: ---</div>
+            <div id="anchorDate" style="font-size: 0.65rem; color: #5a6e7f; text-align: center; margin-top: 10px; padding-top: 6px; border-top: 1px dashed rgba(255,255,255,0.1);">ANCORADO EM: ---</div>
         </div>
         <div class="chart-container"><canvas id="chartW"></canvas></div>
     </div>
@@ -322,7 +459,7 @@
                     
                     if (!logData || logData.length === 0) {
                         alert("Nenhum dado gerado para a matriz.");
-                        btn.innerText = "EXPORTAR MATRIZ (CSV)";
+                        btn.innerText = "EXPORTAR MATRIZ";
                         btn.style.color = "#00d4ff";
                         return;
                     }
@@ -342,12 +479,12 @@
                     link.click();
                     document.body.removeChild(link);
 
-                    btn.innerText = "EXPORTAR MATRIZ (CSV)";
+                    btn.innerText = "EXPORTAR MATRIZ";
                     btn.style.color = "#00d4ff";
                 } catch (err) {
                     console.error(err);
                     alert("Erro ao exportar CSV: " + err.message);
-                    btn.innerText = "EXPORTAR MATRIZ (CSV)";
+                    btn.innerText = "EXPORTAR MATRIZ";
                     btn.style.color = "#00d4ff";
                 }
             }, 50);
@@ -358,7 +495,7 @@
             const prefix = document.getElementById('symbol').value.includes('USD') ? '$' : 'R$';
 
             if (timeShift > 0) {
-                document.getElementById('mainPrice').innerText = `[ RECUO TEMPORAL: -${timeShift} SEMANAS ]`;
+                document.getElementById('mainPrice').innerText = `RECUO: -${timeShift} SEM`;
                 document.getElementById('mainPrice').style.color = '#ff9900';
             } else {
                 document.getElementById('mainPrice').style.color = '#00ff88';
@@ -383,8 +520,16 @@
             document.getElementById('winnerGhost').innerText = winnerGhost ? winnerGhost.id : '---';
             
             const cohesionEl = document.getElementById('cohesionVal');
-            cohesionEl.innerText = `${activeDarwinState.winnerCohesion.toFixed(1)}%`;
-            cohesionEl.style.color = activeDarwinState.winnerCohesion >= 80 ? '#00ff88' : (activeDarwinState.winnerCohesion >= 60 ? '#ffcc00' : '#ff4444');
+            const cohesionFill = document.getElementById('cohesionFill');
+            const cohesion = activeDarwinState.winnerCohesion;
+            
+            cohesionEl.innerText = `${cohesion.toFixed(1)}%`;
+            cohesionFill.style.width = `${Math.min(100, Math.max(0, cohesion))}%`;
+
+            const cohesionColor = cohesion >= 80 ? '#00ff88' : (cohesion >= 60 ? '#ffcc00' : '#ff4444');
+            cohesionEl.style.color = cohesionColor;
+            cohesionFill.style.background = cohesionColor;
+            cohesionFill.style.boxShadow = `0 0 8px ${cohesionColor}`;
 
             document.getElementById('anchorDate').innerText = `SISTEMA ANCORADO DESDE: ${new Date(activeDarwinState.anchorTime).toLocaleDateString('pt-BR')}`;
 
@@ -415,23 +560,32 @@
 
         function initChart() {
             const canvas = document.getElementById('chartW');
+            const ctx = canvas.getContext('2d');
+
+            const gradientGreen = ctx.createLinearGradient(0, 0, 0, 400);
+            gradientGreen.addColorStop(0, 'rgba(0, 255, 136, 0.25)');
+            gradientGreen.addColorStop(1, 'rgba(0, 255, 136, 0.0)');
+
             const ds = [
-                { label: 'Preço Real', data: [], borderColor: '#ffffff', borderWidth: 2, pointRadius: 0, hitRadius: 15, tension: 0, z: 10 }
+                { 
+                    label: 'Preço Real', data: [], borderColor: '#ffffff', borderWidth: 2, 
+                    pointRadius: 0, hitRadius: 15, tension: 0, z: 10
+                }
             ];
             
-            const ghostColors = ['rgba(0, 150, 255, 0.4)', 'rgba(100, 100, 255, 0.3)'];
+            const ghostColors = ['rgba(0, 212, 255, 0.4)', 'rgba(120, 80, 255, 0.35)'];
             for(let i=0; i<2; i++) {
-                ds.push({ label: `Standby`, data: [], borderColor: ghostColors[i], borderWidth: 1.5, borderDash: [5, 5], pointRadius: 0, hitRadius: 15, tension: 0, z: 1 });
+                ds.push({ label: `Standby`, data: [], borderColor: ghostColors[i], borderWidth: 1.5, borderDash: [4, 4], pointRadius: 0, hitRadius: 15, tension: 0, z: 1 });
             }
             ds.push({ label: `Standby Extra`, data: [], borderColor: 'transparent', borderWidth: 0 });
 
             ds.push({ 
                 label: 'ROTA PRINCIPAL', data: [], 
                 borderColor: '#00ff88', borderWidth: 3.5, pointRadius: 0, hitRadius: 20, tension: 0, 
-                backgroundColor: 'rgba(0, 255, 136, 0.05)', fill: false, z: 5 
+                backgroundColor: gradientGreen, fill: true, z: 5 
             });
 
-            chartW = new Chart(canvas.getContext('2d'), {
+            chartW = new Chart(ctx, {
                 type: 'line',
                 data: { datasets: ds },
                 options: {
@@ -439,23 +593,72 @@
                     interaction: { mode: 'nearest', intersect: true }, 
                     layout: { padding: { right: 50 } },
                     scales: { 
-                        x: { type: 'time', grid: { display: true, color: 'rgba(255,255,255,0.03)' }, ticks: { color: '#666' } }, 
-                        y: { position: 'right', grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#aaa', font: {weight: 'bold'} } } 
+                        x: { 
+                            type: 'time', 
+                            grid: { display: true, color: 'rgba(0, 212, 255, 0.05)' }, 
+                            ticks: { color: '#647a8e', font: { family: 'Share Tech Mono' } } 
+                        }, 
+                        y: { 
+                            position: 'right', 
+                            grid: { color: 'rgba(0, 212, 255, 0.05)' }, 
+                            ticks: { color: '#00d4ff', font: { family: 'Share Tech Mono', weight: 'bold' } } 
+                        } 
                     },
                     plugins: { 
                         legend: { display: false }, 
                         tooltip: { 
                             enabled: true, mode: 'nearest', intersect: true,
-                            backgroundColor: 'rgba(0,0,0,0.95)', titleColor: '#00d4ff', bodyFont: {size: 14, weight: 'bold'}, padding: 12,
+                            backgroundColor: 'rgba(4, 10, 18, 0.95)', 
+                            titleColor: '#00d4ff', 
+                            bodyColor: '#00ff88',
+                            borderColor: 'rgba(0, 255, 136, 0.3)',
+                            borderWidth: 1,
+                            displayColors: false,
+                            bodyFont: { size: 12, family: 'Share Tech Mono', weight: 'bold' }, 
+                            padding: 10,
                             callbacks: { 
                                 title: (tooltipItems) => {
                                     const rawTimestamp = tooltipItems[0].parsed.x;
                                     const date = new Date(rawTimestamp);
-                                    return "Data Alvo: " + date.toLocaleDateString('pt-BR');
+                                    return "DATA: " + date.toLocaleDateString('pt-BR');
                                 },
                                 label: (ctx) => {
                                     const prefix = document.getElementById('symbol').value.includes('USD') ? '$' : 'R$';
-                                    return `${ctx.dataset.label}: ${prefix} ${ctx.parsed.y.toLocaleString('pt-BR', {maximumFractionDigits:0})}`;
+                                    const pointVal = ctx.parsed.y;
+                                    const pointTimestamp = ctx.parsed.x;
+                                    
+                                    // Obter o índice e timestamp de referência ativo no momento na tela
+                                    const evalEndIdx = timeShift > 0 ? (histW.length - 1) - timeShift : (histW.length - 1);
+                                    const refPrice = (histW.length && histW[evalEndIdx]) ? histW[evalEndIdx].c : pointVal;
+                                    const refTimestamp = (histW.length && histW[evalEndIdx]) ? histW[evalEndIdx].x : pointTimestamp;
+                                    
+                                    // Cálculo de variação percentual
+                                    const pctDiff = ((pointVal - refPrice) / refPrice) * 100;
+                                    const formattedPct = (pctDiff >= 0 ? '+' : '') + pctDiff.toFixed(2) + '%';
+                                    
+                                    // Cálculo da distância temporal em Semanas e Dias
+                                    const diffMs = pointTimestamp - refTimestamp;
+                                    const absDaysTotal = Math.round(Math.abs(diffMs) / (1000 * 60 * 60 * 24));
+                                    const weeks = Math.floor(absDaysTotal / 7);
+                                    const days = absDaysTotal % 7;
+                                    
+                                    let timeStr = "";
+                                    if (diffMs === 0) {
+                                        timeStr = "DIST: REF (0 sem)";
+                                    } else {
+                                        const sign = diffMs > 0 ? "+" : "-";
+                                        let parts = [];
+                                        if (weeks > 0) parts.push(`${weeks} sem`);
+                                        if (days > 0 || weeks === 0) parts.push(`${days}d`);
+                                        timeStr = `DIST: ${sign}${parts.join(' ')}`;
+                                    }
+                                    
+                                    return [
+                                        `${ctx.dataset.label}`,
+                                        `${prefix} ${pointVal.toLocaleString('pt-BR', {maximumFractionDigits:0})}`,
+                                        `VAR: ${formattedPct}`,
+                                        timeStr
+                                    ];
                                 }
                             } 
                         } 
